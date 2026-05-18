@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What's new in Athlete-Sync — follow our journey as we roll out smarter AI scheduling tools.">
+<title>Updates | Athlete-Sync</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+/* ── UPDATES PAGE STYLES ── */
+
+.upd-hero{padding:calc(var(--nav-h) + 64px) 0 72px;background:var(--bg);border-bottom:1px solid var(--bdr)}
+.upd-hero h1{margin-top:14px;max-width:600px}
+.upd-hero p{margin-top:16px;max-width:520px}
+
+/* Spotlight */
+.spotlight{background:var(--surf);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);padding:80px 0}
+.spot-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.spot-left{display:flex;flex-direction:column;gap:20px}
+.spot-right{background:var(--card);border:1px solid var(--bdr2);padding:0;overflow:hidden;min-height:340px;position:relative;display:flex;align-items:center;justify-content:center}
+.spot-ui-mock{width:100%;padding:28px;display:flex;flex-direction:column;gap:10px}
+.mock-bar{height:36px;border-radius:0;display:flex;align-items:center;padding:0 14px;font-size:12px;font-weight:600;letter-spacing:.04em}
+.mock-bar-head{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);color:var(--blue)}
+.mock-event{background:rgba(34,197,94,.1);border-left:3px solid var(--green);color:var(--green);justify-content:space-between}
+.mock-event-2{background:rgba(59,130,246,.1);border-left:3px solid var(--blue);color:var(--blue);justify-content:space-between}
+.mock-conflict{background:rgba(239,68,68,.08);border-left:3px solid #ef4444;color:#fca5a5;justify-content:space-between;opacity:.7}
+.mock-label{font-size:10px;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase;padding:4px 14px}
+.mock-resolve{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.2);color:var(--green);font-size:11px;letter-spacing:.06em;padding:8px 14px;text-transform:uppercase;font-weight:700}
+
+/* Timeline */
+.timeline-section{background:var(--bg);padding:var(--sp) 0}
+.timeline-header{margin-bottom:56px}
+.tl-stack{display:flex;flex-direction:column;gap:0}
+.tl-item{display:grid;grid-template-columns:160px 1fr;gap:48px;padding:36px 0;border-bottom:1px solid var(--bdr);position:relative}
+.tl-item:last-child{border-bottom:none}
+.tl-date{display:flex;flex-direction:column;gap:4px;padding-top:4px}
+.tl-month{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.tl-year{font-size:13px;color:var(--txt3)}
+.tl-dot{position:absolute;left:152px;top:44px;width:10px;height:10px;border:2px solid var(--blue);background:var(--bg)}
+.tl-content{display:flex;flex-direction:column;gap:10px}
+.tl-tag{display:inline-block;padding:3px 10px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:var(--blue);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;width:fit-content}
+.tl-title{font-size:20px;font-weight:700;color:#fff;line-height:1.3}
+.tl-desc{font-size:14px;color:var(--txt2);line-height:1.7;max-width:540px}
+
+/* Newsletter removed */
+
+@media(max-width:768px){
+  .spot-grid{grid-template-columns:1fr;gap:36px}
+  .tl-item{grid-template-columns:1fr;gap:12px}
+  .tl-dot{display:none}
+  .tl-date{flex-direction:row;gap:8px;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="./index.html" class="logo">
+      <div class="logo-grid" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="logo-txt">Athlete-Sync</span>
+    </a>
+    <div class="nav-links">
+      <a href="./how-it-works.html">How it works</a>
+      <a href="./updates.html">Updates</a>
+    </div>
+    <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
+      <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt2)'">Login</a>
+      <a href="./get-started.html" class="btn btn-p btn-sm">Get started</a>
+    </div>
+    <button class="hmbg" id="hmbg" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mob-menu" id="mob-menu">
+  <a href="./how-it-works.html">How it works</a>
+  <a href="./updates.html">Updates</a>
+  <a href="./login.html" style="font-size:16px;font-weight:600;color:var(--txt2);padding:10px 0;border-bottom:1px solid var(--bdr)">Login</a>
+  <a href="./get-started.html" class="btn btn-p" style="margin-top:8px">Get started</a>
+</div>
+
+<!-- HEADER -->
+<section class="upd-hero">
+  <div class="wrap">
+    <p class="eye">Product Updates</p>
+    <h1 class="d2 upd-hero-h1">What's New in Athlete-Sync</h1>
+    <p class="sub">Follow our journey as we roll out smarter AI scheduling tools.</p>
+  </div>
+</section>
+
+<!-- SPOTLIGHT -->
+<section class="spotlight">
+  <div class="wrap">
+    <div class="spot-grid">
+      <div class="spot-left">
+        <span class="tag">Latest Release &mdash; May 2026</span>
+        <h2 class="d3">Introducing Multi-Sport Team Linking</h2>
+        <p class="sub" style="font-size:16px">Athletes competing across multiple sports can now link every team, coach, and venue into one unified conflict layer. Our new multi-sport engine identifies overlapping commitments across disciplines and proposes optimized resolution paths automatically.</p>
+        <p class="sm">Available now for all Pro and Team plan subscribers. Legacy schedules migrate automatically.</p>
+        <div style="margin-top:8px">
+          <a href="./get-started.html" class="btn btn-p">Get started &rarr;</a>
+        </div>
+      </div>
+      <div class="spot-right">
+        <div class="spot-ui-mock">
+          <div class="mock-bar mock-bar-head">Athlete-Sync &mdash; Conflict Scheduling Layers</div>
+          <div class="mock-label">Soccer Team — Spring Season</div>
+          <div class="mock-bar mock-event"><span>Training Block</span><span>Mon 06:00</span></div>
+          <div class="mock-bar mock-event"><span>Away Match vs Rovers</span><span>Sat 14:00</span></div>
+          <div class="mock-label">Basketball Team — Regional Cup</div>
+          <div class="mock-bar mock-event-2"><span>Practice Session</span><span>Mon 07:30</span></div>
+          <div class="mock-bar mock-conflict"><span>⚠ Conflict Detected</span><span>Overlap: 90 min</span></div>
+          <div class="mock-resolve">✓ AI Resolution Applied &mdash; Slot shifted to 05:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="timeline-section">
+  <div class="wrap">
+    <div class="timeline-header">
+      <p class="eye" style="margin-bottom:10px">Changelog</p>
+      <h2 class="d3">Release History</h2>
+    </div>
+    <div class="tl-stack">
+
+      <div class="tl-item">
+        <div class="tl-date">
+          <span class="tl-month">April 2026</span>
+          <span class="tl-year">v2.4</span>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <span class="tl-tag">v2.4 &mdash; Performance</span>
+          <h3 class="tl-title">Smart Travel Buffers Enabled</h3>
+          <p class="tl-desc">Athlete-Sync now pulls live traffic and transit data from your current location to all upcoming event venues. Buffer blocks are automatically inserted 45, 30, and 15 minutes before departure — fully adjustable per sport type.</p>
+          <ul class="col" style="gap:8px;margin-top:4px">
+            <li class="sm" style="font-size:13px">&rarr; Real-time traffic API integration</li>
+            <li class="sm" style="font-size:13px">&rarr; Multi-modal transit support (driving, cycling, public transport)</li>
+            <li class="sm" style="font-size:13px">&rarr; Custom buffer preferences per event category</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-date">
+          <span class="tl-month">March 2026</span>
+          <span class="tl-year">v2.2</span>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <span class="tl-tag">v2.2 &mdash; Integrations</span>
+          <h3 class="tl-title">Apple Calendar &amp; iCal Native Integration</h3>
+          <p class="tl-desc">iCloud and iCal feeds now sync bidirectionally with Athlete-Sync in under 5 seconds. Events written from your Apple device appear instantly in your Athlete-Sync timeline — and vice versa — without manual refresh.</p>
+          <ul class="col" style="gap:8px;margin-top:4px">
+            <li class="sm" style="font-size:13px">&rarr; Sub-5s bidirectional sync</li>
+            <li class="sm" style="font-size:13px">&rarr; iCloud shared calendar support</li>
+            <li class="sm" style="font-size:13px">&rarr; iOS Shortcut automation hooks</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-date">
+          <span class="tl-month">February 2026</span>
+          <span class="tl-year">v2.0</span>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <span class="tl-tag">v2.0 &mdash; Core Engine</span>
+          <h3 class="tl-title">The AI Scheduling Engine Overhaul</h3>
+          <p class="tl-desc">Version 2.0 represents a ground-up rebuild of our core scheduling intelligence. The new engine is 4x faster at conflict resolution, supports nested schedule hierarchies, and introduces the Predictive Load Balancing model that prevents athlete burnout before it happens.</p>
+          <ul class="col" style="gap:8px;margin-top:4px">
+            <li class="sm" style="font-size:13px">&rarr; 4x faster conflict resolution</li>
+            <li class="sm" style="font-size:13px">&rarr; Predictive Load Balancing (beta)</li>
+            <li class="sm" style="font-size:13px">&rarr; Nested schedule hierarchies for team rosters</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter section removed -->
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="foot-in">
+    <div class="foot-l">
+      <span>Made by Shyrlx</span>
+      <span>yugdanidhariya007@gmail.com</span>
+    </div>
+    <div class="foot-r" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <span>&copy; 2026 Athlete-Sync. All rights reserved.</span>
+      <div style="display:flex;gap:16px">
+        <a href="./privacy.html" style="font-size:12px;color:var(--txt3);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Privacy Policy</a>
+        <a href="./terms.html" style="font-size:12px;color:var(--txt3);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Terms & Conditions</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const hmbg = document.getElementById('hmbg');
+  const mob = document.getElementById('mob-menu');
+  hmbg.addEventListener('click', () => {
+    mob.classList.toggle('open');
+    const spans = hmbg.querySelectorAll('span');
+    mob.classList.contains('open')
+      ? (spans[0].style.cssText='transform:rotate(45deg) translate(5px,5px)',spans[1].style.opacity='0',spans[2].style.cssText='transform:rotate(-45deg) translate(5px,-5px)')
+      : (spans[0].style.cssText='',spans[1].style.opacity='',spans[2].style.cssText='');
+  });
+</script>
+</body>
+</html>

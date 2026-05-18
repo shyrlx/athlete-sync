@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Learn how Athlete-Sync's AI scheduling engine works — three steps to total time ownership for athletes.">
+<title>How It Works | Athlete-Sync</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+/* ── HOW IT WORKS PAGE STYLES ── */
+
+.hiw-hero{padding:calc(var(--nav-h) + 64px) 0 80px;background:var(--bg);position:relative;overflow:hidden}
+.hiw-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 100% 50%,rgba(59,130,246,.07) 0%,transparent 70%);pointer-events:none}
+.hiw-hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.hiw-hero-left{display:flex;flex-direction:column;gap:20px}
+.hiw-hero-img{border:1px solid var(--bdr2);overflow:hidden;background:var(--card)}
+.hiw-hero-img img{width:100%;height:380px;object-fit:cover}
+
+/* Steps */
+.steps-section{background:var(--surf);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.step-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bdr2);margin-bottom:20px;background:rgba(59,130,246,.06)}
+.step-num{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.step-card{background:var(--card);border:1px solid var(--bdr);padding:36px 28px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
+.step-card:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.step-card h3{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:12px;line-height:1.3}
+.step-card p{font-size:14px;color:var(--txt2);line-height:1.7}
+
+/* Feature alternating rows */
+.feature-section{background:var(--bg)}
+.feat-row{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;padding:80px 0;border-bottom:1px solid var(--bdr)}
+.feat-row:last-child{border-bottom:none}
+.feat-text{display:flex;flex-direction:column;gap:20px}
+.feat-text .caps{color:var(--blue)}
+.feat-text h2{font-size:clamp(24px,3vw,36px);font-weight:800;line-height:1.15;letter-spacing:-.02em}
+.feat-img{border:1px solid var(--bdr2);overflow:hidden;background:var(--card)}
+.feat-img img{width:100%;height:400px;object-fit:cover;transition:transform .5s}
+.feat-img:hover img{transform:scale(1.03)}
+.feat-meta{display:flex;gap:24px;padding-top:16px;border-top:1px solid var(--bdr);margin-top:8px}
+.feat-meta-item{display:flex;flex-direction:column;gap:3px}
+.feat-meta-item .caps{font-size:10px}
+.feat-meta-item strong{font-size:15px;font-weight:700;color:#fff}
+
+/* Middle Banner */
+.mid-banner{background:var(--blue);padding:72px 0;position:relative;overflow:hidden}
+.mid-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 60%)}
+.mid-banner-in{text-align:center;position:relative;display:flex;flex-direction:column;align-items:center;gap:28px}
+.mid-banner h2{font-size:clamp(22px,3.5vw,42px);font-weight:900;letter-spacing:-.02em;line-height:1.1;color:#fff}
+.mid-banner-btns{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.btn-white{background:#fff;color:var(--blue);border:1.5px solid #fff}
+.btn-white:hover{background:rgba(255,255,255,.9);transform:translateY(-1px)}
+.btn-ghost-white{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+.btn-ghost-white:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+
+@media(max-width:768px){
+  .hiw-hero-grid{grid-template-columns:1fr;gap:36px}
+  .hiw-hero-img img{height:280px}
+  .feat-row{grid-template-columns:1fr;gap:36px;padding:56px 0}
+  .feat-row.rev-mobile .feat-img{order:-1}
+  .feat-img img{height:280px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="./index.html" class="logo">
+      <div class="logo-grid" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="logo-txt">Athlete-Sync</span>
+    </a>
+    <div class="nav-links">
+      <a href="./how-it-works.html">How it works</a>
+      <a href="./updates.html">Updates</a>
+    </div>
+    <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
+      <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt2)'">Login</a>
+      <a href="./get-started.html" class="btn btn-p btn-sm">Get started</a>
+    </div>
+    <button class="hmbg" id="hmbg" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mob-menu" id="mob-menu">
+  <a href="./how-it-works.html">How it works</a>
+  <a href="./updates.html">Updates</a>
+  <a href="./login.html" style="font-size:16px;font-weight:600;color:var(--txt2);padding:10px 0;border-bottom:1px solid var(--bdr)">Login</a>
+  <a href="./get-started.html" class="btn btn-p" style="margin-top:8px">Get started</a>
+</div>
+
+<!-- HERO -->
+<section class="hiw-hero">
+  <div class="wrap">
+    <div class="hiw-hero-grid">
+      <div class="hiw-hero-left">
+        <p class="eye">The Science of Scheduling</p>
+        <div class="accent-bar"></div>
+        <h1 class="d2">How Athlete-Sync Optimizes Your Game</h1>
+        <p class="sub">We turned chaotic team threads and messy calendars into a single, automated timeline built specifically for athletes.</p>
+      </div>
+      <div class="hiw-hero-img">
+        <img src="./images/calendar_dashboard.png" alt="Athlete-Sync calendar dashboard showing October 2024 schedule" loading="eager">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3-STEP GRID -->
+<section class="steps-section sec">
+  <div class="wrap">
+    <div style="margin-bottom:52px">
+      <p class="caps" style="color:var(--blue);margin-bottom:10px">Connect. Automate. Play.</p>
+      <h2 class="d3">Three steps to total<br>time ownership</h2>
+    </div>
+    <div class="g3">
+      <div class="step-card">
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="square">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <span class="step-num">Step 01</span>
+        <h3>Sync Your Existing Calendars</h3>
+        <p>Instantly link Google Calendar, Apple Calendar, or team portal feeds. No manual entry required. All your events land in one intelligent timeline.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="square">
+            <circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/>
+            <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>
+          </svg>
+        </div>
+        <span class="step-num">Step 02</span>
+        <h3>AI Conflict Resolution</h3>
+        <p>Our intelligent engine scans for double-bookings, transit times between fields, and rest windows, automatically shifting blocks to find the perfect fit.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="square">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <span class="step-num">Step 03</span>
+        <h3>Live Updates &amp; Reminders</h3>
+        <p>Get real-time push notifications the second a game time changes, a field location updates, or a practice gets rained out. Never be caught off guard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE ROWS -->
+<section class="feature-section">
+  <div class="wrap">
+
+    <!-- Row 1: Smart Travel Windows -->
+    <div class="feat-row">
+      <div class="feat-text">
+        <p class="caps">Built for every level</p>
+        <h2>Smart Travel Windows</h2>
+        <p class="sub" style="font-size:16px">Never arrive late to a warm-up again. Athlete-Sync calculates real-time traffic data between your home, gym, and competition venues, automatically adding 'buffer blocks' to your schedule based on live road conditions.</p>
+        <div class="feat-meta">
+          <div class="feat-meta-item">
+            <span class="caps">Accuracy</span>
+            <strong>Real-Time</strong>
+          </div>
+          <div class="feat-meta-item">
+            <span class="caps">Coverage</span>
+            <strong>Global</strong>
+          </div>
+        </div>
+      </div>
+      <div class="feat-img">
+        <img src="./images/phone_map_route.jpg" alt="Phone showing map route to Wembley Stadium" loading="lazy">
+      </div>
+    </div>
+
+    <!-- Row 2: Team & Coach Delegation -->
+    <div class="feat-row rev-mobile">
+      <div class="feat-img">
+        <img src="./images/sports_ground_coach.jpg" alt="Coach with writing pad on sports ground" loading="lazy">
+      </div>
+      <div class="feat-text">
+        <p class="caps">Team intelligence</p>
+        <h2>Team &amp; Coach Delegation</h2>
+        <p class="sub" style="font-size:16px">Streamline communication across the whole roster. Coaches can push itinerary changes instantly to every player's mobile app, while maintaining privacy for personal calendar events. One update, everyone synced.</p>
+        <ul class="col" style="gap:14px;margin-top:8px">
+          <li class="row" style="gap:12px">
+            <div class="check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="sm" style="font-size:14px">Instant Roster Broadcasts</span>
+          </li>
+          <li class="row" style="gap:12px">
+            <div class="check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="sm" style="font-size:14px">Personal Privacy Shields</span>
+          </li>
+          <li class="row" style="gap:12px">
+            <div class="check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="sm" style="font-size:14px">Coach Approval Workflow</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MID BANNER -->
+<section class="mid-banner">
+  <div class="wrap">
+    <div class="mid-banner-in">
+      <h2>READY TO ELIMINATE<br>SCHEDULING STRESS?</h2>
+      <div class="mid-banner-btns">
+        <a href="./get-started.html" class="btn btn-white btn-lg">Get started now</a>
+        <a href="./updates.html" class="btn btn-ghost-white btn-lg">View updates</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="foot-in">
+    <div class="foot-l">
+      <span>Made by Shyrlx</span>
+      <span>yugdanidhariya007@gmail.com</span>
+    </div>
+    <div class="foot-r" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <span>&copy; 2026 Athlete-Sync. All rights reserved.</span>
+      <div style="display:flex;gap:16px">
+        <a href="./privacy.html" style="font-size:12px;color:var(--txt3);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Privacy Policy</a>
+        <a href="./terms.html" style="font-size:12px;color:var(--txt3);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Terms & Conditions</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const hmbg = document.getElementById('hmbg');
+  const mob = document.getElementById('mob-menu');
+  hmbg.addEventListener('click', () => {
+    mob.classList.toggle('open');
+    const spans = hmbg.querySelectorAll('span');
+    mob.classList.contains('open')
+      ? (spans[0].style.cssText='transform:rotate(45deg) translate(5px,5px)',spans[1].style.opacity='0',spans[2].style.cssText='transform:rotate(-45deg) translate(5px,-5px)')
+      : (spans[0].style.cssText='',spans[1].style.opacity='',spans[2].style.cssText='');
+  });
+</script>
+</body>
+</html>

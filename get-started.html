@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Create your free Athlete-Sync account. Join 1,500+ athletes optimizing their training schedules with AI.">
+<title>Get Started | Athlete-Sync</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+/* ── GET STARTED PAGE STYLES ── */
+
+body{min-height:100vh;display:flex;flex-direction:column}
+
+.gs-layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  min-height:100vh;
+  padding-top:var(--nav-h);
+  flex:1;
+}
+
+/* Left panel */
+.gs-left{
+  background:linear-gradient(160deg,#0b1426 0%,#0f172a 60%,#0a1525 100%);
+  border-right:1px solid var(--bdr);
+  padding:72px 56px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:40px;
+  position:relative;
+  overflow:hidden;
+}
+.gs-left::before{
+  content:'';position:absolute;top:-100px;right:-100px;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.gs-left::after{
+  content:'';position:absolute;bottom:-80px;left:-80px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(34,197,94,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.gs-hero-text{display:flex;flex-direction:column;gap:16px;position:relative}
+.gs-hero-text h2{font-size:clamp(22px,2.5vw,32px);font-weight:800;line-height:1.2;letter-spacing:-.02em}
+.gs-hero-text p{font-size:15px;color:var(--txt2);line-height:1.7}
+.gs-benefits{display:flex;flex-direction:column;gap:16px;position:relative}
+.gs-benefit{display:flex;align-items:flex-start;gap:14px}
+.gs-check{width:22px;height:22px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.gs-check svg{width:12px;height:12px}
+.gs-benefit-text{display:flex;flex-direction:column;gap:2px}
+.gs-benefit-text strong{font-size:14px;font-weight:700;color:#fff}
+.gs-benefit-text span{font-size:13px;color:var(--txt2)}
+.gs-social-proof{display:flex;align-items:center;gap:14px;padding:20px;border:1px solid var(--bdr);background:rgba(255,255,255,.02);position:relative}
+.gs-avatars{display:flex}
+.gs-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--bg);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-left:-8px;color:#fff}
+.gs-avatar:first-child{margin-left:0}
+.gs-avatar:nth-child(1){background:#3b82f6}
+.gs-avatar:nth-child(2){background:#22c55e}
+.gs-avatar:nth-child(3){background:#8b5cf6}
+.gs-avatar:nth-child(4){background:#f59e0b}
+.gs-proof-text{display:flex;flex-direction:column;gap:2px}
+.gs-proof-text strong{font-size:13px;font-weight:700;color:#fff}
+.gs-proof-text span{font-size:12px;color:var(--txt3)}
+
+/* Right panel */
+.gs-right{
+  background:var(--bg);
+  padding:72px 56px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:0;
+}
+.gs-form-wrap{max-width:420px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.gs-form-head{display:flex;flex-direction:column;gap:6px}
+.gs-form-head h1{font-size:clamp(22px,2.5vw,30px);font-weight:800;letter-spacing:-.02em}
+.gs-form-head p{font-size:14px;color:var(--txt3)}
+.gs-form{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+.field input,
+.field select{
+  width:100%;background:var(--card);border:1px solid var(--bdr2);
+  color:#fff;padding:13px 16px;font-family:'Instrument Sans',sans-serif;
+  font-size:14px;outline:none;border-radius:0;transition:border-color .2s,background .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.field input::placeholder{color:var(--txt3)}
+.field input:focus,
+.field select:focus{border-color:var(--blue);background:rgba(59,130,246,.04)}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer}
+.field select option{background:#1e293b;color:#fff}
+.divider-line{display:flex;align-items:center;gap:16px}
+.divider-line::before,.divider-line::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.divider-line span{font-size:12px;color:var(--txt3);font-weight:500;white-space:nowrap}
+.oauth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.oauth-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 16px;background:var(--card);border:1px solid var(--bdr2);
+  color:var(--txt2);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;transition:border-color .2s,background .2s,color .2s;border-radius:0;
+}
+.oauth-btn:hover{border-color:var(--bdr2);background:var(--surf);color:#fff}
+.oauth-btn svg{flex-shrink:0}
+.gs-login-link{text-align:center;font-size:13px;color:var(--txt3)}
+.gs-login-link a{color:var(--blue);font-weight:600;transition:color .2s}
+.gs-login-link a:hover{color:var(--blue-h)}
+.pw-wrap{position:relative}
+.pw-wrap input{width:100%;padding-right:44px}
+.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt3);cursor:pointer;padding:2px;transition:color .2s}
+.pw-toggle:hover{color:var(--txt2)}
+
+@media(max-width:900px){
+  .gs-layout{grid-template-columns:1fr}
+  .gs-left{padding:56px 32px;min-height:auto;border-right:none;border-bottom:1px solid var(--bdr)}
+  .gs-right{padding:56px 32px}
+}
+@media(max-width:480px){
+  .gs-left{padding:40px 20px}
+  .gs-right{padding:40px 20px}
+  .oauth-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="./index.html" class="logo">
+      <div class="logo-grid" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="logo-txt">Athlete-Sync</span>
+    </a>
+    <div class="nav-links">
+      <a href="./how-it-works.html">How it works</a>
+      <a href="./updates.html">Updates</a>
+    </div>
+    <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
+      <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt2)'">Login</a>
+      <a href="./get-started.html" class="btn btn-p btn-sm">Get started</a>
+    </div>
+    <button class="hmbg" id="hmbg" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mob-menu" id="mob-menu">
+  <a href="./how-it-works.html">How it works</a>
+  <a href="./updates.html">Updates</a>
+  <a href="./login.html" style="font-size:16px;font-weight:600;color:var(--txt2);padding:10px 0;border-bottom:1px solid var(--bdr)">Login</a>
+  <a href="./get-started.html" class="btn btn-p" style="margin-top:8px">Get started</a>
+</div>
+
+<!-- SPLIT LAYOUT -->
+<main class="gs-layout">
+
+  <!-- LEFT: VALUE PANEL -->
+  <div class="gs-left">
+    <div class="gs-hero-text">
+      <div class="accent-bar"></div>
+      <h2>Join 1,500+ athletes optimizing their training daily</h2>
+      <p>Your sports schedule, handled by AI. Focus on performance — we'll handle the logistics.</p>
+    </div>
+
+    <div class="gs-benefits">
+      <div class="gs-benefit">
+        <div class="gs-check"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+        <div class="gs-benefit-text">
+          <strong>Seamless Calendar Sync</strong>
+          <span>Connect Google, Apple, and team feeds in one click</span>
+        </div>
+      </div>
+      <div class="gs-benefit">
+        <div class="gs-check"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+        <div class="gs-benefit-text">
+          <strong>Automated Travel Windows</strong>
+          <span>Real-time transit buffers added before every event</span>
+        </div>
+      </div>
+      <div class="gs-benefit">
+        <div class="gs-check"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+        <div class="gs-benefit-text">
+          <strong>Real-Time Conflict Overrides</strong>
+          <span>AI resolves double-bookings before they become a problem</span>
+        </div>
+      </div>
+      <div class="gs-benefit">
+        <div class="gs-check"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="2,6 5,9 10,3"/></svg></div>
+        <div class="gs-benefit-text">
+          <strong>Coach &amp; Team Delegation</strong>
+          <span>Push schedule updates to every team member instantly</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gs-social-proof">
+      <div class="gs-avatars">
+        <div class="gs-avatar">JR</div>
+        <div class="gs-avatar">ML</div>
+        <div class="gs-avatar">AK</div>
+        <div class="gs-avatar">TQ</div>
+      </div>
+      <div class="gs-proof-text">
+        <strong>1,500+ athletes already synced</strong>
+        <span>98% user satisfaction rate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: SIGNUP FORM -->
+  <div class="gs-right">
+    <div class="gs-form-wrap">
+      <div class="gs-form-head">
+        <h1>Create your free account</h1>
+        <p>No credit card required.</p>
+      </div>
+
+      <form class="gs-form" id="signup-form" onsubmit="handleSignup(event)">
+        <div class="field">
+          <label for="full-name">Full Name</label>
+          <input type="text" id="full-name" name="fullName" placeholder="e.g. Jamie Rivers" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password">
+            <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Toggle password">
+              <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="role">I am a...</label>
+          <select id="role" name="role">
+            <option value="" disabled selected>Select your role</option>
+            <option value="athlete">Individual Athlete</option>
+            <option value="coach">Coach / Trainer</option>
+            <option value="manager">Team Manager / Captain</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-p btn-full" id="signup-btn" style="padding:16px;font-size:15px;margin-top:4px">
+          Create Account
+        </button>
+        <p class="form-error" id="form-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;line-height:1.5"></p>
+      </form>
+
+      <p class="gs-login-link" style="margin-top:16px">Already have an account? <a href="./login.html">Log in</a></p>
+
+      <p style="font-size:12px;color:var(--txt3);text-align:center;line-height:1.7;margin-top:12px">By creating an account, you agree to our <a href="./terms.html" style="color:var(--blue);font-weight:600">Terms & Conditions</a> and <a href="./privacy.html" style="color:var(--blue);font-weight:600">Privacy Policy</a>.</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Hamburger
+  const hmbg = document.getElementById('hmbg');
+  const mob = document.getElementById('mob-menu');
+  hmbg.addEventListener('click', () => {
+    mob.classList.toggle('open');
+    const spans = hmbg.querySelectorAll('span');
+    mob.classList.contains('open')
+      ? (spans[0].style.cssText='transform:rotate(45deg) translate(5px,5px)',spans[1].style.opacity='0',spans[2].style.cssText='transform:rotate(-45deg) translate(5px,-5px)')
+      : (spans[0].style.cssText='',spans[1].style.opacity='',spans[2].style.cssText='');
+  });
+
+  // Password toggle
+  const pwToggle = document.getElementById('pw-toggle');
+  const pwInput = document.getElementById('password');
+  let shown = false;
+  pwToggle.addEventListener('click', () => {
+    shown = !shown;
+    pwInput.type = shown ? 'text' : 'password';
+    document.getElementById('eye-icon').innerHTML = shown
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  });
+
+  // Strict email regex: requires user@domain.tld with a valid TLD of 2+ letters
+  const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
+
+  function showError(msg) {
+    const el = document.getElementById('form-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function clearError() {
+    const el = document.getElementById('form-error');
+    el.textContent = '';
+    el.style.display = 'none';
+  }
+
+  // Clear error on input
+  ['full-name', 'email', 'password', 'role'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', clearError);
+  });
+
+  // Form submission handler
+  function handleSignup(e) {
+    e.preventDefault();
+    clearError();
+
+    const name = document.getElementById('full-name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+    const btn = document.getElementById('signup-btn');
+
+    // Validate full name
+    if (!name || name.length < 2) {
+      showError('Please enter your full name (at least 2 characters).');
+      document.getElementById('full-name').focus();
+      return;
+    }
+
+    // Validate email format with strict TLD check
+    if (!email) {
+      showError('Please enter your email address.');
+      document.getElementById('email').focus();
+      return;
+    }
+    if (!EMAIL_REGEX.test(email)) {
+      showError('Please enter a valid email address (e.g. user@domain.com).');
+      document.getElementById('email').focus();
+      return;
+    }
+
+    // Validate password length
+    if (!password || password.length < 8) {
+      showError('Password must be at least 8 characters long.');
+      document.getElementById('password').focus();
+      return;
+    }
+
+    // Validate role selection
+    if (!role) {
+      showError('Please select your role.');
+      document.getElementById('role').focus();
+      return;
+    }
+
+    // CHECK FOR EXISTING EMAIL IN LOCAL STORAGE
+    const existingAccounts = JSON.parse(localStorage.getItem('athleteSyncAccounts') || '[]');
+    if (existingAccounts.includes(email.toLowerCase())) {
+        alert("An account with this email already exists. Redirecting to Login.");
+        window.location.href = './login.html';
+        return;
+    }
+    
+    // Add to local storage
+    existingAccounts.push(email.toLowerCase());
+    localStorage.setItem('athleteSyncAccounts', JSON.stringify(existingAccounts));
+
+    // All validations passed — simulate account creation
+    btn.textContent = 'Creating account...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'not-allowed';
+
+    setTimeout(() => {
+      btn.textContent = '✓ Account created!';
+      btn.style.background = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.opacity = '1';
+      // Redirect to dashboard
+      setTimeout(() => {
+        window.location.href = './dashboard.html';
+      }, 600);
+    }, 1200);
+  }
+</script>
+</body>
+</html>

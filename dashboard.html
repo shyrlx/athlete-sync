@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your Athlete-Sync dashboard — manage your schedule, events, and training all in one place.">
+<title>Dashboard | Athlete-Sync</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+body{min-height:100vh;display:flex;flex-direction:column}
+
+.dash-main{flex:1;padding-top:var(--nav-h);background:var(--bg)}
+
+/* Welcome Banner */
+.dash-welcome{padding:48px 0 40px;border-bottom:1px solid var(--bdr)}
+.welcome-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px}
+.welcome-left{display:flex;flex-direction:column;gap:8px}
+.welcome-left h1{font-size:clamp(24px,3vw,36px);font-weight:800;letter-spacing:-.02em}
+.welcome-left p{color:var(--txt2);font-size:15px}
+.dash-date{font-size:12px;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+
+/* Stats Row */
+.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:32px 0}
+.dash-stat{background:var(--card);border:1px solid var(--bdr);padding:24px 20px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.dash-stat:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.dash-stat-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3)}
+.dash-stat-value{font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-.03em;line-height:1}
+.dash-stat:nth-child(1) .dash-stat-value{color:var(--blue)}
+.dash-stat:nth-child(2) .dash-stat-value{color:var(--green)}
+.dash-stat:nth-child(3) .dash-stat-value{color:#f59e0b}
+.dash-stat:nth-child(4) .dash-stat-value{color:#8b5cf6}
+
+/* Schedule Section */
+.dash-section{padding:40px 0;border-top:1px solid var(--bdr)}
+.dash-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.dash-section-head h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+
+/* AI Form Panel */
+.ai-form-panel{background:var(--card);border:1px solid var(--bdr);padding:24px;border-radius:8px;margin-bottom:32px;display:flex;flex-direction:column;gap:16px}
+.ai-form-panel textarea{width:100%;height:100px;background:var(--bg);border:1px solid var(--bdr2);color:#fff;padding:16px;font-size:14px;resize:vertical;outline:none;border-radius:6px;font-family:inherit;transition:border-color .2s}
+.ai-form-panel textarea:focus{border-color:var(--blue)}
+.btn-submit{background:var(--blue);color:#fff;border:none;padding:12px 24px;font-weight:700;border-radius:6px;cursor:pointer;align-self:flex-start;transition:background .2s}
+.btn-submit:hover{background:#2b6cb0}
+.btn-submit:disabled{opacity:0.7;cursor:not-allowed}
+.ai-empty-state{padding:40px;text-align:center;color:var(--txt3);font-size:14px;border:1px dashed var(--bdr2);border-radius:8px;background:rgba(255,255,255,.02)}
+
+/* Event List */
+.dash-events{display:flex;flex-direction:column;gap:2px}
+.dash-ev{display:grid;grid-template-columns:120px 1fr 160px 100px;gap:20px;align-items:center;padding:16px 20px;background:var(--card);border:1px solid var(--bdr);transition:border-color .2s,background .2s}
+.dash-ev:hover{border-color:var(--bdr2);background:var(--surf)}
+.dash-ev-time{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.02em}
+.dash-ev-name{font-size:15px;font-weight:600;color:#fff}
+.dash-ev-venue{font-size:13px;color:var(--txt3)}
+.dash-ev-status{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;width:fit-content;justify-self:end}
+.status-upcoming{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:var(--blue)}
+.status-live{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.status-done{background:rgba(255,255,255,.05);border:1px solid var(--bdr);color:var(--txt3)}
+
+/* Quick Actions */
+.dash-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:40px 0;border-top:1px solid var(--bdr)}
+.dash-action{background:var(--card);border:1px solid var(--bdr);padding:28px 24px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s,transform .2s;cursor:pointer}
+.dash-action:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.dash-action-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bdr2);background:rgba(59,130,246,.06)}
+.dash-action h3{font-size:16px;font-weight:700;color:#fff}
+.dash-action p{font-size:13px;color:var(--txt2);line-height:1.6}
+
+/* Empty State Pulse */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 2s ease infinite}
+
+@media(max-width:900px){
+  .dash-stats{grid-template-columns:1fr 1fr}
+  .dash-ev{grid-template-columns:100px 1fr 100px}
+  .dash-ev-venue{display:none}
+  .dash-actions{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .dash-stats{grid-template-columns:1fr}
+  .dash-ev{grid-template-columns:80px 1fr auto}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="./index.html" class="logo">
+      <div class="logo-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <span class="logo-txt">Athlete-Sync</span>
+    </a>
+    <div class="nav-links">
+      <a href="./how-it-works.html">How it works</a>
+      <a href="./updates.html">Updates</a>
+    </div>
+    <div class="nav-r">
+      <a href="#" class="btn btn-o btn-sm" id="logout-btn">Log out</a>
+    </div>
+    <button class="hmbg" id="hmbg" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mob-menu" id="mob-menu">
+  <a href="./how-it-works.html">How it works</a>
+  <a href="./updates.html">Updates</a>
+  <a href="#" class="btn btn-o" style="margin-top:8px" id="mob-logout-btn">Log out</a>
+</div>
+
+<main class="dash-main">
+
+  <!-- WELCOME -->
+  <section class="dash-welcome">
+    <div class="wrap">
+      <div class="welcome-row">
+        <div class="welcome-left">
+          <p class="eye"><span class="pulse-dot" style="margin-right:8px"></span> Dashboard Active</p>
+          <h1>Welcome back, Athlete</h1>
+          <p>Here's your training overview for this week.</p>
+        </div>
+        <span class="dash-date" id="dash-date"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="wrap">
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <span class="dash-stat-label">This Week</span>
+        <span class="dash-stat-value">7</span>
+        <span class="sm">Scheduled events</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-label">Completed</span>
+        <span class="dash-stat-value">3</span>
+        <span class="sm">Sessions done</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-label">Conflicts</span>
+        <span class="dash-stat-value">0</span>
+        <span class="sm">AI-resolved</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-label">Sync Status</span>
+        <span class="dash-stat-value">Live</span>
+        <span class="sm">All calendars synced</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPCOMING SCHEDULE -->
+  <div class="wrap">
+    <div class="dash-section">
+      <div class="dash-section-head">
+        <h2>Upcoming Schedule</h2>
+        <span class="caps">This week</span>
+      </div>
+      
+      <!-- AI Schedule Form -->
+      <form id="ai-schedule-form" class="ai-form-panel">
+        <textarea name="prompt" id="schedule-prompt" placeholder="Paste your chaotic schedule or type your training layout here... (e.g., 'Monday 9am sprint drills, Wednesday match in Paris')"></textarea>
+        <button type="submit" id="submit-btn" class="btn-submit">Generate Optimized Schedule</button>
+      </form>
+
+      <div class="dash-events" id="schedule-container">
+        <div class="ai-empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><br>
+          Your AI-generated schedule will appear here.<br>Submit your daily routine above to get started.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="wrap">
+    <div class="dash-actions">
+      <div class="dash-action">
+        <div class="dash-action-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="square"><rect x="3" y="4" width="18" height="18" rx="0"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3>Add New Event</h3>
+        <p>Schedule a training session, match, or recovery block.</p>
+      </div>
+      <div class="dash-action">
+        <div class="dash-action-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="square"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <h3>Sync Calendars</h3>
+        <p>Connect Google Calendar, Apple Calendar, or team feeds.</p>
+      </div>
+      <div class="dash-action">
+        <div class="dash-action-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="square"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Invite Team</h3>
+        <p>Add coaches and teammates to share schedules.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="foot-in">
+    <div class="foot-l">
+      <span>Made by Shyrlx</span>
+      <span>yugdanidhariya007@gmail.com</span>
+    </div>
+    <div class="foot-r" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <span>&copy; 2026 Athlete-Sync. All rights reserved.</span>
+      <div style="display:flex;gap:16px">
+        <a href="./privacy.html" style="font-size:12px;color:var(--txt3);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Privacy Policy</a>
+        <a href="./terms.html" style="font-size:12px;color:var(--txt3);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Terms & Conditions</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Hamburger
+  const hmbg=document.getElementById('hmbg'),mob=document.getElementById('mob-menu');
+  hmbg.addEventListener('click',()=>{mob.classList.toggle('open');const s=hmbg.querySelectorAll('span');mob.classList.contains('open')?(s[0].style.cssText='transform:rotate(45deg) translate(5px,5px)',s[1].style.opacity='0',s[2].style.cssText='transform:rotate(-45deg) translate(5px,-5px)'):(s[0].style.cssText='',s[1].style.opacity='',s[2].style.cssText='')});
+
+  // Display current date
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('dash-date').textContent = now.toLocaleDateString('en-US', opts);
+
+  // Logout Handler
+  function handleLogout(e) {
+    e.preventDefault();
+    // Clear session-related local storage if applicable
+    // (We leave 'athleteSyncAccounts' intact so they can log back in)
+    window.location.href = './index.html';
+  }
+  document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  document.getElementById('mob-logout-btn').addEventListener('click', handleLogout);
+
+  // Handle AI Schedule Generation
+  const aiForm = document.getElementById('ai-schedule-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const scheduleContainer = document.getElementById('schedule-container');
+
+  if (aiForm) {
+    aiForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const promptText = document.getElementById('schedule-prompt').value.trim();
+      if (!promptText) return alert('Please enter your schedule first.');
+
+      // Loading State
+      const originalBtnText = submitBtn.innerText;
+      submitBtn.innerText = '⚡ Processing Schedule...';
+      submitBtn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('prompt', promptText);
+
+        const response = await fetch('./ai-schedule.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          // Render the new schedule securely, replacing the empty state
+          scheduleContainer.innerHTML = `<div class="ai-empty-state" style="border-style:solid;text-align:left;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;">${data.schedule.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
+        } else {
+          scheduleContainer.innerHTML = `<div class="ai-empty-state" style="color:#ef4444">❌ System Error: ${data.message}</div>`;
+        }
+      } catch (err) {
+        scheduleContainer.innerHTML = `<div class="ai-empty-state" style="color:#ef4444">❌ Connection Failed. Ensure your files are uploaded correctly.</div>`;
+      } finally {
+        submitBtn.innerText = originalBtnText;
+        submitBtn.disabled = false;
+      }
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Log in to your Athlete-Sync account.">
+<title>Log in | Athlete-Sync</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+/* ── LOGIN PAGE STYLES ── */
+body{min-height:100vh;display:flex;flex-direction:column}
+.login-layout{
+  display:flex;
+  min-height:100vh;
+  padding-top:var(--nav-h);
+  flex:1;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(160deg,#0b1426 0%,#0f172a 60%,#0a1525 100%);
+  position:relative;
+  overflow:hidden;
+}
+.login-layout::before{
+  content:'';position:absolute;top:-100px;left:-100px;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.login-wrap{
+  background:var(--bg);
+  padding:56px;
+  border:1px solid var(--bdr);
+  width:100%;
+  max-width:480px;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  gap:32px;
+}
+.gs-form-head{display:flex;flex-direction:column;gap:6px;text-align:center}
+.gs-form-head h1{font-size:clamp(22px,2.5vw,30px);font-weight:800;letter-spacing:-.02em}
+.gs-form-head p{font-size:14px;color:var(--txt3)}
+.gs-form{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+.field input{
+  width:100%;background:var(--card);border:1px solid var(--bdr2);
+  color:#fff;padding:13px 16px;font-family:'Instrument Sans',sans-serif;
+  font-size:14px;outline:none;border-radius:0;transition:border-color .2s,background .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.field input::placeholder{color:var(--txt3)}
+.field input:focus{border-color:var(--blue);background:rgba(59,130,246,.04)}
+.pw-wrap{position:relative}
+.pw-wrap input{width:100%;padding-right:44px}
+.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt3);cursor:pointer;padding:2px;transition:color .2s}
+.pw-toggle:hover{color:var(--txt2)}
+.gs-login-link{text-align:center;font-size:13px;color:var(--txt3)}
+.gs-login-link a{color:var(--blue);font-weight:600;transition:color .2s}
+.gs-login-link a:hover{color:var(--blue-h)}
+
+@media(max-width:640px){
+  .login-wrap{padding:40px 24px;border:none;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+  .login-layout{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="./index.html" class="logo">
+      <div class="logo-grid" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="logo-txt">Athlete-Sync</span>
+    </a>
+    <div class="nav-links">
+      <a href="./how-it-works.html">How it works</a>
+      <a href="./updates.html">Updates</a>
+    </div>
+    <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
+      <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt2)'">Login</a>
+      <a href="./get-started.html" class="btn btn-p btn-sm">Get started</a>
+    </div>
+    <button class="hmbg" id="hmbg" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mob-menu" id="mob-menu">
+  <a href="./how-it-works.html">How it works</a>
+  <a href="./updates.html">Updates</a>
+  <a href="./login.html" style="font-size:16px;font-weight:600;color:var(--txt2);padding:10px 0;border-bottom:1px solid var(--bdr)">Login</a>
+  <a href="./get-started.html" class="btn btn-p" style="margin-top:8px">Get started</a>
+</div>
+
+<!-- LOGIN LAYOUT -->
+<main class="login-layout">
+  <div class="login-wrap">
+    <div class="gs-form-head">
+      <h1>Welcome back</h1>
+      <p>Log in to manage your sports schedule.</p>
+    </div>
+
+    <form class="gs-form" id="login-form" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="current-password">
+          <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Toggle password">
+            <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-p btn-full" id="login-btn" style="padding:16px;font-size:15px;margin-top:4px">
+        Log in
+      </button>
+      <p class="form-error" id="form-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;line-height:1.5;text-align:center;"></p>
+    </form>
+
+    <p class="gs-login-link">Don't have an account? <a href="./get-started.html">Sign up here</a></p>
+  </div>
+</main>
+
+<script>
+  // Hamburger
+  const hmbg = document.getElementById('hmbg');
+  const mob = document.getElementById('mob-menu');
+  hmbg.addEventListener('click', () => {
+    mob.classList.toggle('open');
+    const spans = hmbg.querySelectorAll('span');
+    mob.classList.contains('open')
+      ? (spans[0].style.cssText='transform:rotate(45deg) translate(5px,5px)',spans[1].style.opacity='0',spans[2].style.cssText='transform:rotate(-45deg) translate(5px,-5px)')
+      : (spans[0].style.cssText='',spans[1].style.opacity='',spans[2].style.cssText='');
+  });
+
+  // Password toggle
+  const pwToggle = document.getElementById('pw-toggle');
+  const pwInput = document.getElementById('password');
+  let shown = false;
+  pwToggle.addEventListener('click', () => {
+    shown = !shown;
+    pwInput.type = shown ? 'text' : 'password';
+    document.getElementById('eye-icon').innerHTML = shown
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  });
+
+  // Strict email regex: requires user@domain.tld with a valid TLD of 2+ letters
+  const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
+
+  function showError(msg) {
+    const el = document.getElementById('form-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function clearError() {
+    const el = document.getElementById('form-error');
+    el.textContent = '';
+    el.style.display = 'none';
+  }
+
+  // Clear error on input
+  ['email', 'password'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', clearError);
+  });
+
+  // Form submission handler
+  function handleLogin(e) {
+    e.preventDefault();
+    clearError();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+
+    // Validate email format with strict TLD check
+    if (!email) {
+      showError('Please enter your email address.');
+      document.getElementById('email').focus();
+      return;
+    }
+    if (!EMAIL_REGEX.test(email)) {
+      showError('Please enter a valid email address (e.g. user@domain.com).');
+      document.getElementById('email').focus();
+      return;
+    }
+
+    // Validate password
+    if (!password) {
+      showError('Please enter your password.');
+      document.getElementById('password').focus();
+      return;
+    }
+
+    // Check if account exists (simulate backend)
+    const existingAccounts = JSON.parse(localStorage.getItem('athleteSyncAccounts') || '[]');
+    if (!existingAccounts.includes(email.toLowerCase())) {
+        showError('No account found with this email address.');
+        return;
+    }
+
+    // All validations passed — simulate login
+    btn.textContent = 'Logging in...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'not-allowed';
+
+    setTimeout(() => {
+      btn.textContent = '✓ Welcome back!';
+      btn.style.background = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.opacity = '1';
+      // Redirect to dashboard
+      setTimeout(() => {
+        window.location.href = './dashboard.html';
+      }, 600);
+    }, 1200);
+  }
+</script>
+</body>
+</html>
