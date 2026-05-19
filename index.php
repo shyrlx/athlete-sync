@@ -22,6 +22,8 @@ try {
     $pdo = new PDO("pgsql:host=$host;dbname=$db;sslmode=require", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
+    // This forces the server to output the real error message at the top of your page
+    echo "<div style='background:#b91c1c; color:#ffffff; padding:20px; font-family:sans-serif; text-align:center; font-weight:bold; font-size:16px; z-index:9999; position:relative;'>🚨 ACTUAL DATABASE ERROR: " . htmlspecialchars($e->getMessage()) . "</div>";
     $connectionFailed = true;
 }
 
