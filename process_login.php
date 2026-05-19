@@ -2,33 +2,37 @@
 session_start();
 require_once 'db_config.php';
 
-header('Content-Type: application/json');
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
     if (empty($email) || empty($password)) {
-        echo json_encode(['status' => 'error', 'message' => 'Email and password are required.']);
+        echo "Email and password are required.";
         exit;
     }
 
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
-        $stmt->execute([':email' => $email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $conn->prepare("SELECT id, password_hash FROM users WHERE email = ?");
+    if ($stmt) {
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        if ($user && password_verify($password, $user['password_hash'])) {
-            $_SESSION['user_id'] = $user['id'];
-            // You can also store other user data in session if needed
-            echo json_encode(['status' => 'success']);
+        if ($user = $result->fetch_assoc()) {
+            if (password_verify($password, $user['password_hash'])) {
+                $_SESSION['user_id'] = $user['id'];
+                header("Location: dashboard.php");
+                exit;
+            } else {
+                echo "Invalid email or password.";
+            }
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Invalid credentials.']);
+            echo "Invalid email or password.";
         }
-    } catch (PDOException $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Database error.']);
+        $stmt->close();
+    } else {
+        echo "Database error.";
     }
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
+    echo "Invalid request method.";
 }
 ?>

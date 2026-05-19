@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_id'])) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Your Athlete-Sync dashboard — manage your schedule, events, and training all in one place.">
 <title>Dashboard | Athlete-Sync</title>
-<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="style.css">
 <style>
 body{min-height:100vh;display:flex;flex-direction:column}
 .dash-main{flex:1;padding-top:var(--nav-h);background:var(--bg)}

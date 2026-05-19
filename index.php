@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Athlete-Sync — AI-driven sports scheduling platform. Plan smarter, play more, stress less.">
   <title>Athlete-Sync | Own Your Game Time</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="style.css">
   <style>
     .hero { min-height: 100vh; display: flex; align-items: center; padding-top: var(--nav-h); background: var(--bg); position: relative; overflow: hidden }
     .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 60% at 70% 50%, rgba(59, 130, 246, .07) 0%, transparent 70%); pointer-events: none }
