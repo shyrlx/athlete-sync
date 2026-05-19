@@ -309,7 +309,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
   });
 
   // Form submission handler
-  function handleSignup(e) {
+  async function handleSignup(e) {
     e.preventDefault();
     clearError();
 
@@ -352,34 +352,43 @@ body{min-height:100vh;display:flex;flex-direction:column}
       return;
     }
 
-    // CHECK FOR EXISTING EMAIL IN LOCAL STORAGE
-    const existingAccounts = JSON.parse(localStorage.getItem('athleteSyncAccounts') || '[]');
-    if (existingAccounts.includes(email.toLowerCase())) {
-        alert("An account with this email already exists. Redirecting to Login.");
-        window.location.href = './login.html';
-        return;
-    }
-    
-    // Add to local storage
-    existingAccounts.push(email.toLowerCase());
-    localStorage.setItem('athleteSyncAccounts', JSON.stringify(existingAccounts));
-
-    // All validations passed — simulate account creation
     btn.textContent = 'Creating account...';
     btn.disabled = true;
     btn.style.opacity = '0.7';
     btn.style.cursor = 'not-allowed';
 
-    setTimeout(() => {
-      btn.textContent = '✓ Account created!';
-      btn.style.background = 'var(--green)';
-      btn.style.borderColor = 'var(--green)';
+    try {
+      const formData = new FormData();
+      formData.append('full_name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('role', role); // Even if it's not currently stored in the DB, pass it just in case
+
+      const res = await fetch('./process_signup.php', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        btn.textContent = '✓ Account created!';
+        btn.style.background = 'var(--green)';
+        btn.style.borderColor = 'var(--green)';
+        btn.style.opacity = '1';
+        setTimeout(() => {
+          window.location.href = './dashboard.php';
+        }, 600);
+      } else {
+        showError(data.message || 'Registration failed. Please try again.');
+        btn.textContent = 'Create Account';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      }
+    } catch (err) {
+      showError('Connection error. Please try again later.');
+      btn.textContent = 'Create Account';
+      btn.disabled = false;
       btn.style.opacity = '1';
-      // Redirect to dashboard
-      setTimeout(() => {
-        window.location.href = './dashboard.php';
-      }, 600);
-    }, 1200);
+      btn.style.cursor = 'pointer';
+    }
   }
 </script>
 </body>

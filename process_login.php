@@ -1,20 +1,34 @@
 <?php
 session_start();
-$host = 'localhost'; $dbname = 'athlete_sync'; $db_user = 'root'; $db_pass = '';
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $db_user, $db_pass);
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+require_once 'db_config.php';
+
+header('Content-Type: application/json');
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+
+    if (empty($email) || empty($password)) {
+        echo json_encode(['status' => 'error', 'message' => 'Email and password are required.']);
+        exit;
+    }
+
+    try {
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
-        $stmt->execute([':email' => $_POST['email']]);
+        $stmt->execute([':email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user && password_verify($_POST['password'], $user['password_hash'])) {
+        if ($user && password_verify($password, $user['password_hash'])) {
             $_SESSION['user_id'] = $user['id'];
+            // You can also store other user data in session if needed
             echo json_encode(['status' => 'success']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Invalid credentials.']);
         }
+    } catch (PDOException $e) {
+        echo json_encode(['status' => 'error', 'message' => 'Database error.']);
     }
-} catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => 'DB Error.']);
+} else {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
 }
+?>
