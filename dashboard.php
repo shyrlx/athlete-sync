@@ -14,10 +14,10 @@ $recent_users_count = 0;
 
 // 2. Run the secret 7-day user countdown tracker if YOU log in
 if ($is_admin) {
-    $host = 'sql308.infinityfree.com';
-    $db   = 'if0_41742028_XXX';
-    $user = 'if0_41793025';
-    $pass = 'Yug112011';
+    $host = 'dpg-d85urindl75s73993gng-a';
+    $db   = 'athletesync';
+    $user = 'syncuser';
+    $pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
     $charset = 'utf8mb4';
 
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
