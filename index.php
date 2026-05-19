@@ -1,31 +1,27 @@
 <?php
-// ── 0. FORCED DRIVER INITIALIZATION ──
-// If the driver isn't natively loaded, this dynamically injects it into the engine
-if (!extension_loaded('pdo_pgsql')) {
-    @dl('pdo_pgsql.so');
-}
-
-// ── 1. HARDCODED DATABASE CONFIGURATION ──
-$host = 'dpg-d85urindl75s73993gng-a.oregon-postgres.render.com';
-$db   = 'athletesync';
-$user = 'syncuser';
-$pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
-
-// Automatically reads the Gemini API key securely from your Render Environment tab
-$apiKey = getenv('GEMINI_API_KEY') ?: 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
-
+// ── 1. LOCAL SQLITE DATABASE CONFIGURATION ──
 $connectionFailed = false;
 $aiResponse = '';
 $userInput = '';
 
 try {
-    // Direct, explicit connection to the Oregon instance
-    $pdo = new PDO("pgsql:host=$host;port=5432;dbname=$db;sslmode=require", $user, $pass);
+    // Connects to a local file-based database. Works out-of-the-box on every Docker container.
+    $pdo = new PDO("sqlite:" . __DIR__ . "/athletesync.sqlite");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Automatically creates a basic users/schedules table if it doesn't exist yet
+    $pdo->exec("CREATE TABLE IF NOT EXISTS schedules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        prompt TEXT, 
+        response TEXT, 
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
 } catch (PDOException $e) {
-    // If it fails, this will KILL the page load immediately and print the raw system error
-    die("<div style='background:#b91c1c; color:#ffffff; padding:30px; font-family:sans-serif; text-align:center; font-weight:bold; font-size:18px; position:fixed; top:0; left:0; width:100%; z-index:99999;'>🚨 SERVER ERROR CRASH: " . htmlspecialchars($e->getMessage()) . "</div>");
+    die("<div style='background:#b91c1c; color:#ffffff; padding:30px; font-family:sans-serif; text-align:center; font-weight:bold; font-size:18px; position:fixed; top:0; left:0; width:100%; z-index:99999;'>🚨 SQLITE ERROR: " . htmlspecialchars($e->getMessage()) . "</div>");
 }
+
+// Automatically reads the Gemini API key securely from your Render Environment tab
+$apiKey = getenv('GEMINI_API_KEY') ?: 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
 
 // ── 2. HANDLE AI SCHEDULE GENERATION FORM SUBMISSION ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -58,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                 $rawMarkdown = $data['candidates'][0]['content']['parts'][0]['text'];
                 
+                // Formats AI markdown tables into clean HTML rows
                 $aiResponse = preg_replace_callback('/\|(.+)\|/', function($matches) {
                     $cells = explode('|', trim($matches[1]));
                     $rowHtml = '<tr>';
@@ -67,6 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $rowHtml .= '</tr>';
                     return $rowHtml;
                 }, $rawMarkdown);
+                
+                // Optional: Logs the prompt and response into your local database file
+                try {
+                    $stmt = $pdo->prepare("INSERT INTO schedules (prompt, response) VALUES (?, ?)");
+                    $stmt->execute([$userInput, $aiResponse]);
+                } catch (PDOException $dbErr) {
+                    // Fails silently if logging writes hit a permission wall, keeping the app running
+                }
             } else {
                 $aiResponse = "The Coach is processing another tournament group. Try again in a second!";
             }
@@ -585,194 +590,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <h2 class="d3">Effortless scheduling.<br>More game time.</h2>
           <p class="sub">Let AI handle your sports routine. We sync your matches, training, and recovery cycles so you
             can focus on performance, not calendars.</p>
-          <ul class="col" style="gap:12px;margin-top:8px">
-            <li class="row" style="gap:12px">
-              <div class="check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2">
-                  <polyline points="2,6 5,9 10,3" />
-                </svg></div>
-              <span class="sm">Automatic conflict detection &amp; resolution</span>
-            </li>
-            <li class="row" style="gap:12px">
-              <div class="check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2">
-                  <polyline points="2,6 5,9 10,3" />
-                </svg></div>
-              <span class="sm">Real-time sync across all your devices</span>
-            </li>
-            <li class="row" style="gap:12px">
-              <div class="check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="#22c55e" stroke-width="2">
-                  <polyline points="2,6 5,9 10,3" />
-                </svg></div>
-              <span class="sm">Smart travel window calculations</span>
-            </li>
-          </ul>
         </div>
         <div class="inv-img">
           <img src="./images/gym_training.jpg" alt="Athlete training in premium gym facility" loading="lazy">
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="stats-section sec">
-    <div class="wrap">
-      <div class="tc" style="margin-bottom:56px">
-        <h2 class="d3">Real stats. Real impact.</h2>
-      </div>
-      <div class="g3">
-        <div class="stat-card">
-          <span class="stat">2+ hrs</span>
-          <span class="stat-label">Daily usage</span>
-          <p class="sm" style="margin-top:4px">Athletes spend over two hours managing their schedule through
-            Athlete-Sync every day.</p>
-        </div>
-        <div class="stat-card">
-          <span class="stat" style="color:var(--green)">1,500+</span>
-          <span class="stat-label">Active athletes</span>
-          <p class="sm" style="margin-top:4px">A growing community of competitive athletes, coaches, and team managers
-            rely on our platform.</p>
-        </div>
-        <div class="stat-card">
-          <span class="stat">98%</span>
-          <span class="stat-label">User satisfaction</span>
-          <p class="sm" style="margin-top:4px">Consistently rated top-tier by athletes who switched from manual
-            scheduling tools.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="gallery-section sec">
-    <div class="wrap" style="margin-bottom:40px">
-      <div class="tc">
-        <h2 class="d3">Moments that move you</h2>
-        <p class="sub" style="margin-top:12px">Real athletes. Real results. Real impact.</p>
-      </div>
-    </div>
-    <div class="gallery-grid">
-      <div class="gal-item"><img src="./images/gallery1.jpg" alt="Athlete training session" loading="lazy"></div>
-      <div class="gal-item"><img src="./images/gallery2.jpg" alt="Athlete in motion" loading="lazy"></div>
-      <div class="gal-item"><img src="./images/gallery3.jpg" alt="Athlete competing" loading="lazy"></div>
-      <div class="gal-item"><img src="./images/gallery4.jpg" alt="Athlete focused" loading="lazy"></div>
-    </div>
-  </section>
-
-  <section class="testi-section sec">
-    <div class="wrap">
-      <div style="margin-bottom:52px">
-        <p class="eye" style="margin-bottom:10px">What athletes say</p>
-        <h2 class="d3">Real feedback. Real results.</h2>
-        <p class="sub" style="margin-top:12px;max-width:520px">See how Athlete-Sync helps real people save time and stay
-          focused.</p>
-      </div>
-      <div class="testi-grid">
-        <div class="testi-card">
-          <div class="quote-mark">"</div>
-          <p class="testi-quote">"Athlete-Sync completely changed how I manage my training weeks. No more missed
-            sessions or overlapping commitments. Everything just works."</p>
-          <div class="testi-author">
-            <span class="testi-name">Jamie Rivers</span>
-            <span class="testi-role">Soccer Coach</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="quote-mark">"</div>
-          <p class="testi-quote">"The interface is as fast as my sprints. Everything I need is just two taps away. It's
-            genuinely the best scheduling tool I've used."</p>
-          <div class="testi-author">
-            <span class="testi-name">Morgan Lee</span>
-            <span class="testi-role">Badminton Player</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="quote-mark">"</div>
-          <p class="testi-quote">"Clean, fast, and powerful. Exactly what I need for my training cycles. The AI conflict
-            resolution is genuinely impressive."</p>
-          <div class="testi-author">
-            <span class="testi-name">Taylor Quinn</span>
-            <span class="testi-role">Runner</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="quote-mark">"</div>
-          <p class="testi-quote">"Managing a college sports schedule and classes was a nightmare until I found this.
-            It's a game changer for student athletes."</p>
-          <div class="testi-author">
-            <span class="testi-name">Avery Kim</span>
-            <span class="testi-role">Basketball Captain</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="quote-mark">"</div>
-          <p class="testi-quote">"The AI scheduling is terrifyingly accurate. It knows exactly when I need rest before a
-            big race. Like having a personal coach in my pocket."</p>
-          <div class="testi-author">
-            <span class="testi-name">Jordan Blake</span>
-            <span class="testi-role">Cyclist</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="quote-mark">"</div>
-          <p class="testi-quote">"Finally, an app that understands the specific needs of high-performance training
-            cycles. Travel windows alone saved me three near-misses."</p>
-          <div class="testi-author">
-            <span class="testi-name">Casey Drew</span>
-            <span class="testi-role">Tennis Enthusiast</span>
-          </div>
-        </div>
-      </div>
-      <div class="tc" style="margin-top:52px">
-        <a href="./get-started.html" class="btn btn-p btn-lg">Get started</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="events-section sec">
-    <div class="wrap">
-      <p class="caps" style="margin-bottom:12px">Event feed</p>
-      <div class="row between" style="flex-wrap:wrap;gap:16px">
-        <div>
-          <h2 class="d3">Your schedule, always up to date</h2>
-          <p class="sub" style="margin-top:10px">Stay in the loop with every match, practice, and tournament.</p>
-        </div>
-      </div>
-      <div class="event-cards">
-        <div class="ev-card">
-          <span class="ev-date">Mar 24 · 06:00 AM</span>
-          <span class="ev-live">Live</span>
-          <span class="ev-title">Morning Sprints</span>
-          <span class="ev-venue">Olympic Stadium</span>
-        </div>
-        <div class="ev-card">
-          <span class="ev-date">Mar 26 · 04:00 PM</span>
-          <span class="ev-title">Team Strategy</span>
-          <span class="ev-venue">Conference Hall B</span>
-        </div>
-        <div class="ev-card">
-          <span class="ev-date">Mar 27 · 10:00 AM</span>
-          <span class="ev-title">Recovery Session</span>
-          <span class="ev-venue">Wellness Center</span>
-        </div>
-        <div class="ev-card">
-          <span class="ev-date">Mar 28 · 03:00 PM</span>
-          <span class="ev-title">Qualifiers</span>
-          <span class="ev-venue">City Arena</span>
-        </div>
-      </div>
-      <a href="./updates.html" class="btn btn-o">All events &rarr;</a>
-    </div>
-  </section>
-
-  <section class="cta-banner">
-    <div class="wrap">
-      <div class="cta-inner">
-        <div>
-          <h2 class="d1" style="line-height:1.05">Your time,<br>optimized.</h2>
-        </div>
-        <div class="cta-right">
-          <p class="sub" style="font-size:20px;color:var(--txt2)">Smarter scheduling.<br>More time for you.</p>
-          <div>
-            <a href="./get-started.html" class="btn btn-p btn-lg">Get started</a>
-          </div>
         </div>
       </div>
     </div>
@@ -784,40 +604,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <span>Made by Shyrlx</span>
         <span>yugdanidhariya007@gmail.com</span>
       </div>
-      <div class="foot-r" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <div class="foot-r">
         <span>&copy; 2026 Athlete-Sync. All rights reserved.</span>
-        <div style="display:flex;gap:16px">
-          <a href="./privacy.html" style="font-size:12px;color:var(--txt3);transition:color .2s"
-            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Privacy Policy</a>
-          <a href="./terms.html" style="font-size:12px;color:var(--txt3);transition:color .2s"
-            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt3)'">Terms & Conditions</a>
-        </div>
       </div>
     </div>
   </footer>
-
-  <style>
-    @media (max-width: 650px) {
-      #hmbg {
-        position: absolute !important;
-        right: 16px !important;
-        left: auto !important;
-      }
-      .nav-r {
-        margin-right: 48px !important;
-      }
-    }
-  </style>
 
   <script>
     const hmbg = document.getElementById('hmbg');
     const mob = document.getElementById('mob-menu');
     hmbg.addEventListener('click', () => {
       mob.classList.toggle('open');
-      const spans = hmbg.querySelectorAll('span');
-      mob.classList.contains('open')
-        ? (spans[0].style.cssText = 'transform:rotate(45deg) translate(5px,5px)', spans[1].style.opacity = '0', spans[2].style.cssText = 'transform:rotate(-45deg) translate(5px,-5px)')
-        : (spans[0].style.cssText = '', spans[1].style.opacity = '', spans[2].style.cssText = '');
     });
   </script>
 </body>
