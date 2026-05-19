@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['routine_prompt'])) {
         $userInput = trim($_POST['routine_prompt']);
         
-        // Updated to the correct v1 stable endpoint for Gemini 3 Flash
-        $url = "https://generativelanguage.googleapis.com/v1/models/gemini-3-flash:generateContent?key=" . $apiKey;
+        // FIXED: Switched to v1beta which is required for gemini-3-flash
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=" . $apiKey;
         
         $payload = [
             "contents" => [
@@ -33,19 +33,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        // Critical headers required for secure cloud container requests
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json'
         ]);
+        
         // Bypasses local container SSL validation bugs if Render's certs are skewed
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
         
         $response = curl_exec($ch);
+        
+        // Track connection issues directly from the hosting container
+        if (curl_errno($ch)) {
+            $curlError = curl_error($ch);
+        }
         curl_close($ch);
 
-        if ($response) {
+        if (isset($curlError)) {
+            $aiResponse = "🚨 Container Network Error: " . htmlspecialchars($curlError);
+        } elseif ($response) {
             $data = json_decode($response, true);
-            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+            
+            // Check if Google returned an explicit API structural error
+            if (isset($data['error'])) {
+                $aiResponse = "🚨 Google API Error: " . htmlspecialchars($data['error']['message']) . " (Code: " . htmlspecialchars($data['error']['code']) . ")";
+            } elseif (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                 $rawMarkdown = $data['candidates'][0]['content']['parts'][0]['text'];
                 
                 // Formats AI markdown tables into clean visual HTML rows
@@ -64,11 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $aiResponse = nl2br(htmlspecialchars($rawMarkdown));
                 }
             } else {
-                // Helpful debugging message if your API key configuration has an issue
-                $aiResponse = "🚨 API Error: The server connected, but the API key was rejected or throttled. Check your GEMINI_API_KEY variable in Render.";
+                // If the request structure mismatched, dump the raw head for debugging
+                $aiResponse = "🚨 Unrecognized API Response Structure. Raw snippet: " . htmlspecialchars(substr($response, 0, 250));
             }
         } else {
-            $aiResponse = "🚨 Network Error: Unable to reach the API endpoint from this container network layer.";
+            $aiResponse = "🚨 Network Error: Received a completely empty response packet from the API endpoint.";
         }
     }
 }
