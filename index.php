@@ -32,7 +32,8 @@
       </div>
       <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
         <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);">Login</a>
-        <a href="./get-started.html" class="btn btn-p btn-sm">Get started</a>
+ <a href="login.html" class="btn btn-p btn-lg">Get Started</a>
+
       </div>
     </div>
   </nav>
