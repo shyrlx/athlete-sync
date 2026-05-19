@@ -1,7 +1,9 @@
 <?php
-// ── 1. UNIFIED DATABASE CONFIGURATION ──
-// Plugs in your exact Oregon external connection string
-$databaseUrl = 'postgresql://syncuser:bHOdFi9esUhZsgtRPbol7STPByaRHnJ8@dpg-d85urindl75s73993gng-a.oregon-postgres.render.com/athletesync';
+// ── 1. HARDCODED DATABASE CONFIGURATION ──
+$host = 'dpg-d85urindl75s73993gng-a.oregon-postgres.render.com';
+$db   = 'athletesync';
+$user = 'syncuser';
+$pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
 
 // Plugs in your Gemini API key
 $apiKey = 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
@@ -11,24 +13,16 @@ $aiResponse = '';
 $userInput = '';
 
 try {
-    // This blocks breaks down your postgresql:// string into the exact parts PHP needs
-    $dbopts = parse_url($databaseUrl);
-    $host = $dbopts["host"];
-    $db   = ltrim($dbopts["path"], '/');
-    $user = $dbopts["user"];
-    $pass = $dbopts["pass"];
-    
-    // Connects with forced SSL protection to Oregon
-    $pdo = new PDO("pgsql:host=$host;dbname=$db;sslmode=require", $user, $pass);
+    // Direct, explicit connection to the Oregon instance
+    $pdo = new PDO("pgsql:host=$host;port=5432;dbname=$db;sslmode=require", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    // This forces the server to output the real error message at the top of your page
-    echo "<div style='background:#b91c1c; color:#ffffff; padding:20px; font-family:sans-serif; text-align:center; font-weight:bold; font-size:16px; z-index:9999; position:relative;'>🚨 ACTUAL DATABASE ERROR: " . htmlspecialchars($e->getMessage()) . "</div>";
-    $connectionFailed = true;
+    // If it fails, this will KILL the page load immediately and print the raw system error
+    die("<div style='background:#b91c1c; color:#ffffff; padding:30px; font-family:sans-serif; text-align:center; font-weight:bold; font-size:18px; position:fixed; top:0; left:0; width:100%; z-index:99999;'>🚨 SERVER ERROR CRASH: " . htmlspecialchars($e->getMessage()) . "</div>");
 }
 
 // ── 2. HANDLE AI SCHEDULE GENERATION FORM SUBMISSION ──
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['routine_prompt'])) {
         $userInput = trim($_POST['routine_prompt']);
         
@@ -58,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
             if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                 $rawMarkdown = $data['candidates'][0]['content']['parts'][0]['text'];
                 
-                // Formats basic markdown tables sent by Gemini into clean HTML tables
                 $aiResponse = preg_replace_callback('/\|(.+)\|/', function($matches) {
                     $cells = explode('|', trim($matches[1]));
                     $rowHtml = '<tr>';
@@ -86,8 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
   <title>Athlete-Sync | Own Your Game Time</title>
   <link rel="stylesheet" href="./css/style.css">
   <style>
-    /* ── INDEX PAGE STYLES ── */
-
     /* Hero */
     .hero {
       min-height: 100vh;
@@ -393,13 +384,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
       overflow: hidden
     }
 
-    .cta-banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 50% 80% at 0% 50%, rgba(59, 130, 246, .06) 0%, transparent 70%)
-    }
-
     .cta-inner {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -439,16 +423,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
     .ai-textarea:focus {
       border-color: var(--blue);
       outline: none;
-    }
-
-    .error-banner {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #ef4444;
-      padding: 16px;
-      font-weight: 600;
-      text-align: center;
-      margin-bottom: 24px;
     }
 
     .response-box {
@@ -571,28 +545,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
         <h2 class="d3">Chaotic Schedule Engine</h2>
       </div>
 
-      <?php if ($connectionFailed): ?>
-        <div class="error-banner">
-          ❌ Connection Failed. Ensure your files are uploaded correctly and credentials match Render.
-        </div>
-      <?php else: ?>
-        <div class="ai-container">
-          <form method="POST" action="#ai-scheduler">
-            <label for="routine_prompt" class="stat-label" style="display:block;margin-bottom:12px;">Drop your chaotic query here:</label>
-            <textarea id="routine_prompt" name="routine_prompt" class="ai-textarea" placeholder="Act as a Chaotic Pickleball Coach..."><?php echo htmlspecialchars($userInput); ?></textarea>
-            <button type="submit" class="btn btn-p btn-lg" style="width:100%">Unleash the Chaos ⚡</button>
-          </form>
+      <div class="ai-container">
+        <form method="POST" action="#ai-scheduler">
+          <label for="routine_prompt" class="stat-label" style="display:block;margin-bottom:12px;">Drop your chaotic query here:</label>
+          <textarea id="routine_prompt" name="routine_prompt" class="ai-textarea" placeholder="Enter your routine..."><?php echo !empty($userInput) ? htmlspecialchars($userInput) : "I am a working guy. My job starts at 9:00 AM and I get back home around 6:30 PM. I am totally exhausted after work, but I love pickleball and want to manage at least 1 hour of playing time daily without destroying my sleep schedule or burning out. Fix my routine and give me a game plan!"; ?></textarea>
+          <button type="submit" class="btn btn-p btn-lg" style="width:100%">Unleash the Chaos ⚡</button>
+        </form>
 
-          <?php if (!empty($aiResponse)): ?>
-            <div class="response-box">
-              <span class="stat-label" style="color:var(--blue)">Generated Manifest:</span>
-              <div style="margin-top:12px; color:var(--txt2); line-height:1.6;">
-                <?php echo $aiResponse; ?>
-              </div>
+        <?php if (!empty($aiResponse)): ?>
+          <div class="response-box">
+            <span class="stat-label" style="color:var(--blue)">Generated Manifest:</span>
+            <div style="margin-top:12px; color:var(--txt2); line-height:1.6;">
+              <?php echo $aiResponse; ?>
             </div>
-          <?php endif; ?>
-        </div>
-      <?php endif; ?>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
   </section>
 
