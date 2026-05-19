@@ -30,10 +30,8 @@
         <a href="./how-it-works.html">How it works</a>
         <a href="./updates.html">Updates</a>
       </div>
-      <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
+      <div class="nav-r">
         <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);">Login</a>
- <a href="login.html" class="btn btn-p btn-lg">Get Started</a>
-
       </div>
     </div>
   </nav>
@@ -46,7 +44,7 @@
           <h1 class="d1">Own your<br>game time</h1>
           <p class="sub" style="max-width:420px">Plan smarter. Play more. Stress less.</p>
           <div class="hero-btns">
-            <a href="dashboard.php" class="btn btn-p btn-lg">Get Started</a>
+            <a href="login.html" class="btn btn-p btn-lg">Get Started</a>
             <a href="./how-it-works.html" class="btn btn-o btn-lg">Learn more</a>
           </div>
         </div>
