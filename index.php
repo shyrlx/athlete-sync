@@ -1,4 +1,10 @@
 <?php
+// ── 0. FORCED DRIVER INITIALIZATION ──
+// If the driver isn't natively loaded, this dynamically injects it into the engine
+if (!extension_loaded('pdo_pgsql')) {
+    @dl('pdo_pgsql.so');
+}
+
 // ── 1. HARDCODED DATABASE CONFIGURATION ──
 $host = 'dpg-d85urindl75s73993gng-a.oregon-postgres.render.com';
 $db   = 'athletesync';
