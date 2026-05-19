@@ -1,10 +1,9 @@
 <?php
 // ── 1. UNIFIED DATABASE CONFIGURATION ──
-// Automatically maps your credentials with required SSL handling
-$host = 'dpg-d85urindl75s73993gng-a.singapore-postgres.render.com'; // Fixed to full external route
-$db   = 'athletesync'; 
-$user = 'syncuser'; 
-$pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
+// Plugs in your exact Oregon external connection string
+$databaseUrl = 'postgresql://syncuser:bHOdFi9esUhZsgtRPbol7STPByaRHnJ8@dpg-d85urindl75s73993gng-a.oregon-postgres.render.com/athletesync';
+
+// Plugs in your Gemini API key
 $apiKey = 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
 
 $connectionFailed = false;
@@ -12,7 +11,14 @@ $aiResponse = '';
 $userInput = '';
 
 try {
-    // Explicitly connects using the full regional hostname and required SSL mode
+    // This blocks breaks down your postgresql:// string into the exact parts PHP needs
+    $dbopts = parse_url($databaseUrl);
+    $host = $dbopts["host"];
+    $db   = ltrim($dbopts["path"], '/');
+    $user = $dbopts["user"];
+    $pass = $dbopts["pass"];
+    
+    // Connects with forced SSL protection to Oregon
     $pdo = new PDO("pgsql:host=$host;dbname=$db;sslmode=require", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
