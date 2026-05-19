@@ -1,3 +1,74 @@
+<?php
+// ── 1. CONFIGURATION & DATABASE CONNECTION ──
+// TODO: Put your Render PostgreSQL connection details inside these quotes one last time!
+$host = 'dpg-d85urindl75s73993gng-a'; 
+$db   = 'athletesync'; 
+$user = 'syncuser'; 
+$pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
+$apiKey = 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; // Put your Gemini API Key here
+
+$connectionFailed = false;
+$aiResponse = '';
+$userInput = '';
+
+try {
+    // Upgraded with sslmode=require so Render stops blocking the handshake
+    $pdo = new PDO("pgsql:host=$host;dbname=$db;sslmode=require", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    $connectionFailed = true;
+}
+
+// ── 2. HANDLE AI SCHEDULE GENERATION FORM SUBMISSION ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
+    if (!empty($_POST['routine_prompt'])) {
+        $userInput = trim($_POST['routine_prompt']);
+        
+        // Construct the payload matching the Gemini API specifications
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=" . $apiKey;
+        
+        $payload = [
+            "contents" => [
+                [
+                    "parts" => [
+                        ["text" => $userInput]
+                    ]
+                ]
+            ]
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        if ($response) {
+            $data = json_decode($response, true);
+            // Extract text from the standard Gemini response structure
+            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                $rawMarkdown = $data['candidates'][0]['content']['parts'][0]['text'];
+                
+                // Helper to cleanly format basic markdown tables sent by Gemini into clean HTML tables
+                $aiResponse = preg_replace_callback('/\|(.+)\|/', function($matches) {
+                    $cells = explode('|', trim($matches[1]));
+                    $rowHtml = '<tr>';
+                    foreach ($cells as $cell) {
+                        $rowHtml .= '<td>' . htmlspecialchars(trim($cell)) . '</td>';
+                    }
+                    $rowHtml .= '</tr>';
+                    return $rowHtml;
+                }, $rawMarkdown);
+            } else {
+                $aiResponse = "The Coach is processing another tournament group. Try again in a second!";
+            }
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -337,6 +408,64 @@
       gap: 20px
     }
 
+    /* AI App Block Styles */
+    .ai-container {
+      background: var(--card);
+      border: 1px solid var(--bdr);
+      padding: 32px;
+      border-radius: 4px;
+      margin-top: 40px;
+    }
+
+    .ai-textarea {
+      width: 100%;
+      min-height: 120px;
+      background: var(--bg);
+      border: 1px solid var(--bdr);
+      color: #fff;
+      padding: 16px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      margin-bottom: 16px;
+    }
+
+    .ai-textarea:focus {
+      border-color: var(--blue);
+      outline: none;
+    }
+
+    .error-banner {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      padding: 16px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .response-box {
+      background: var(--surf);
+      border-left: 4px solid var(--blue);
+      padding: 24px;
+      margin-top: 24px;
+      overflow-x: auto;
+    }
+
+    .response-box table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    .response-box td, .response-box th {
+      border: 1px solid var(--bdr);
+      padding: 12px;
+      font-size: 14px;
+      color: var(--txt2);
+    }
+
     @media(max-width:900px) {
       .testi-grid {
         grid-template-columns: 1fr 1fr
@@ -378,7 +507,6 @@
 
 <body>
 
-  <!-- NAV -->
   <nav class="nav">
     <div class="nav-in">
       <a href="./index.html" class="logo">
@@ -411,7 +539,6 @@
     <a href="./get-started.html" class="btn btn-p" style="margin-top:8px">Get started</a>
   </div>
 
-  <!-- HERO -->
   <section class="hero page-top">
     <div class="wrap" style="width:100%;padding-top:40px;padding-bottom:80px">
       <div class="g2" style="align-items:center">
@@ -420,7 +547,7 @@
           <h1 class="d1">Own your<br>game time</h1>
           <p class="sub" style="max-width:420px">Plan smarter. Play more. Stress less.</p>
           <div class="hero-btns">
-            <a href="./get-started.html" class="btn btn-p btn-lg">Get started</a>
+            <a href="#ai-scheduler" class="btn btn-p btn-lg">Try AI App</a>
             <a href="./how-it-works.html" class="btn btn-o btn-lg">Learn more</a>
           </div>
         </div>
@@ -431,7 +558,38 @@
     </div>
   </section>
 
-  <!-- INVERSE VALUE -->
+  <section id="ai-scheduler" class="sec" style="background: var(--bg); border-top: 1px solid var(--bdr);">
+    <div class="wrap">
+      <div class="tc" style="margin-bottom:32px">
+        <p class="eye">Live Prototype</p>
+        <h2 class="d3">Chaotic Schedule Engine</h2>
+      </div>
+
+      <?php if ($connectionFailed): ?>
+        <div class="error-banner">
+          ❌ Connection Failed. Ensure your files are uploaded correctly and credentials match Render.
+        </div>
+      <?php else: ?>
+        <div class="ai-container">
+          <form method="POST" action="#ai-scheduler">
+            <label for="routine_prompt" class="stat-label" style="display:block;margin-bottom:12px;">Drop your chaotic query here:</label>
+            <textarea id="routine_prompt" name="routine_prompt" class="ai-textarea" placeholder="Act as a Chaotic Pickleball Coach..."><?php echo htmlspecialchars($userInput); ?></textarea>
+            <button type="submit" class="btn btn-p btn-lg" style="width:100%">Unleash the Chaos ⚡</button>
+          </form>
+
+          <?php if (!empty($aiResponse)): ?>
+            <div class="response-box">
+              <span class="stat-label" style="color:var(--blue)">Generated Manifest:</span>
+              <div style="margin-top:12px; color:var(--txt2); line-height:1.6;">
+                <?php echo $aiResponse; ?>
+              </div>
+            </div>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </section>
+
   <section class="inverse sec">
     <div class="wrap">
       <div class="g2">
@@ -475,7 +633,6 @@
     </div>
   </section>
 
-  <!-- STATS -->
   <section class="stats-section sec">
     <div class="wrap">
       <div class="tc" style="margin-bottom:56px">
@@ -504,7 +661,6 @@
     </div>
   </section>
 
-  <!-- GALLERY -->
   <section class="gallery-section sec">
     <div class="wrap" style="margin-bottom:40px">
       <div class="tc">
@@ -520,7 +676,6 @@
     </div>
   </section>
 
-  <!-- TESTIMONIALS -->
   <section class="testi-section sec">
     <div class="wrap">
       <div style="margin-bottom:52px">
@@ -591,7 +746,6 @@
     </div>
   </section>
 
-  <!-- EVENT FEED -->
   <section class="events-section sec">
     <div class="wrap">
       <p class="caps" style="margin-bottom:12px">Event feed</p>
@@ -628,7 +782,6 @@
     </div>
   </section>
 
-  <!-- CTA BANNER -->
   <section class="cta-banner">
     <div class="wrap">
       <div class="cta-inner">
@@ -645,7 +798,6 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <div class="foot-in">
       <div class="foot-l">
@@ -666,15 +818,11 @@
 
   <style>
     @media (max-width: 650px) {
-
-      /* Force the hamburger button cleanly to the far right */
       #hmbg {
         position: absolute !important;
         right: 16px !important;
         left: auto !important;
       }
-
-      /* Push the mobile login link to the left so the hamburger button doesn't sit on it */
       .nav-r {
         margin-right: 48px !important;
       }
@@ -693,5 +841,4 @@
     });
   </script>
 </body>
-
 </html>
