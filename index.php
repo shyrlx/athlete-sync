@@ -5,8 +5,8 @@ $db   = 'athletesync';
 $user = 'syncuser';
 $pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
 
-// Plugs in your Gemini API key
-$apiKey = 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
+// Automatically reads the Gemini API key securely from your Render Environment tab
+$apiKey = getenv('GEMINI_API_KEY') ?: 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
 
 $connectionFailed = false;
 $aiResponse = '';
