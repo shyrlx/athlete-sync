@@ -1,18 +1,18 @@
 <?php
-// ── 1. CONFIGURATION & DATABASE CONNECTION ──
-// TODO: Put your Render PostgreSQL connection details inside these quotes one last time!
-$host = 'dpg-d85urindl75s73993gng-a'; 
+// ── 1. UNIFIED DATABASE CONFIGURATION ──
+// Automatically maps your credentials with required SSL handling
+$host = 'dpg-d85urindl75s73993gng-a.singapore-postgres.render.com'; // Fixed to full external route
 $db   = 'athletesync'; 
 $user = 'syncuser'; 
 $pass = 'bHOdFi9esUhZsgtRPbol7STPByaRHnJ8';
-$apiKey = 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; // Put your Gemini API Key here
+$apiKey = 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
 
 $connectionFailed = false;
 $aiResponse = '';
 $userInput = '';
 
 try {
-    // Upgraded with sslmode=require so Render stops blocking the handshake
+    // Explicitly connects using the full regional hostname and required SSL mode
     $pdo = new PDO("pgsql:host=$host;dbname=$db;sslmode=require", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
@@ -24,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
     if (!empty($_POST['routine_prompt'])) {
         $userInput = trim($_POST['routine_prompt']);
         
-        // Construct the payload matching the Gemini API specifications
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=" . $apiKey;
         
         $payload = [
@@ -48,11 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$connectionFailed) {
 
         if ($response) {
             $data = json_decode($response, true);
-            // Extract text from the standard Gemini response structure
             if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                 $rawMarkdown = $data['candidates'][0]['content']['parts'][0]['text'];
                 
-                // Helper to cleanly format basic markdown tables sent by Gemini into clean HTML tables
+                // Formats basic markdown tables sent by Gemini into clean HTML tables
                 $aiResponse = preg_replace_callback('/\|(.+)\|/', function($matches) {
                     $cells = explode('|', trim($matches[1]));
                     $rowHtml = '<tr>';
