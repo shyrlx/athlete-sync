@@ -5,11 +5,10 @@ $aiResponse = '';
 $userInput = '';
 
 try {
-    // Connects to a local file-based database. Works out-of-the-box on every Docker container.
+    // Connects to a local file-based database to prevent driver crashes
     $pdo = new PDO("sqlite:" . __DIR__ . "/athletesync.sqlite");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Automatically creates a basic users/schedules table if it doesn't exist yet
     $pdo->exec("CREATE TABLE IF NOT EXISTS schedules (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         prompt TEXT, 
@@ -20,7 +19,7 @@ try {
     die("<div style='background:#b91c1c; color:#ffffff; padding:30px; font-family:sans-serif; text-align:center; font-weight:bold; font-size:18px; position:fixed; top:0; left:0; width:100%; z-index:99999;'>🚨 SQLITE ERROR: " . htmlspecialchars($e->getMessage()) . "</div>");
 }
 
-// Automatically reads the Gemini API key securely from your Render Environment tab
+// Reads the Gemini API key from your Render Environment panel
 $apiKey = getenv('GEMINI_API_KEY') ?: 'AIzaSyC6MPbP4ijN2TXNeYs0fs2SiX97CNuZKs4'; 
 
 // ── 2. HANDLE AI SCHEDULE GENERATION FORM SUBMISSION ──
@@ -28,13 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['routine_prompt'])) {
         $userInput = trim($_POST['routine_prompt']);
         
+        // FIXED: Switched to v1beta path which Gemini 3 Flash strictly requires
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=" . $apiKey;
         
         $payload = [
             "contents" => [
                 [
                     "parts" => [
-                        ["text" => $userInput]
+                        ["text" => $userInput . " Provide the response configuration or schedule template as a clean Markdown table structure if applicable."]
                     ]
                 ]
             ]
@@ -44,17 +44,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
         
         $response = curl_exec($ch);
+        
+        if (curl_errno($ch)) {
+            $curlError = curl_error($ch);
+        }
         curl_close($ch);
 
-        if ($response) {
+        if (isset($curlError)) {
+            $aiResponse = "🚨 Container Network Error: " . htmlspecialchars($curlError);
+        } elseif ($response) {
             $data = json_decode($response, true);
-            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+            
+            // Checks if Google rejected the key or request structure
+            if (isset($data['error'])) {
+                $aiResponse = "🚨 Google API Error: " . htmlspecialchars($data['error']['message']) . " (Code: " . htmlspecialchars($data['error']['code']) . ")";
+            } elseif (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                 $rawMarkdown = $data['candidates'][0]['content']['parts'][0]['text'];
                 
-                // Formats AI markdown tables into clean HTML rows
+                // Formats AI markdown tables into HTML rows
                 $aiResponse = preg_replace_callback('/\|(.+)\|/', function($matches) {
                     $cells = explode('|', trim($matches[1]));
                     $rowHtml = '<tr>';
@@ -65,16 +78,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     return $rowHtml;
                 }, $rawMarkdown);
                 
-                // Optional: Logs the prompt and response into your local database file
+                if ($aiResponse === $rawMarkdown) {
+                    $aiResponse = nl2br(htmlspecialchars($rawMarkdown));
+                }
+                
+                // Optional local logging
                 try {
                     $stmt = $pdo->prepare("INSERT INTO schedules (prompt, response) VALUES (?, ?)");
                     $stmt->execute([$userInput, $aiResponse]);
                 } catch (PDOException $dbErr) {
-                    // Fails silently if logging writes hit a permission wall, keeping the app running
+                    // Fail silently if database writes are blocked
                 }
             } else {
-                $aiResponse = "The Coach is processing another tournament group. Try again in a second!";
+                $aiResponse = "🚨 Unrecognized API Response Structure. Raw snippet: " . htmlspecialchars(substr($response, 0, 250));
             }
+        } else {
+            $aiResponse = "🚨 Network Error: Received an empty response from the API endpoint.";
         }
     }
 }
@@ -85,450 +104,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description"
-    content="Athlete-Sync — AI-driven sports scheduling platform. Plan smarter, play more, stress less.">
+  <meta name="description" content="Athlete-Sync — AI-driven sports scheduling platform. Plan smarter, play more, stress less.">
   <title>Athlete-Sync | Own Your Game Time</title>
   <link rel="stylesheet" href="./css/style.css">
   <style>
-    /* Hero */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      padding-top: var(--nav-h);
-      background: var(--bg);
-      position: relative;
-      overflow: hidden
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 60% 60% at 70% 50%, rgba(59, 130, 246, .07) 0%, transparent 70%);
-      pointer-events: none
-    }
-
-    .hero-left {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      max-width: 520px
-    }
-
-    .hero-btns {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 8px
-    }
-
-    .hero-img-wrap {
-      position: relative;
-      border: 1px solid var(--bdr2);
-      overflow: hidden;
-      background: var(--surf)
-    }
-
-    .hero-img-wrap img {
-      width: 100%;
-      height: 500px;
-      object-fit: cover;
-      object-position: center top
-    }
-
-    .hero-img-wrap::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
-      background: linear-gradient(to top, var(--bg), transparent)
-    }
-
-    /* Inverse Value */
-    .inverse {
-      background: var(--surf);
-      border-top: 1px solid var(--bdr);
-      border-bottom: 1px solid var(--bdr)
-    }
-
-    .inv-left {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      padding-right: 16px
-    }
-
-    .inv-icon-wrap {
-      width: 52px;
-      height: 52px;
-      border: 1px solid rgba(34, 197, 94, .35);
-      background: rgba(34, 197, 94, .08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 4px
-    }
-
-    .inv-img {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--bdr2)
-    }
-
-    .inv-img img {
-      width: 100%;
-      height: 460px;
-      object-fit: cover
-    }
-
-    /* Stats */
-    .stats-section {
-      background: var(--bg)
-    }
-
-    .stat-card {
-      border: 1px solid var(--bdr);
-      background: var(--card);
-      padding: 40px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: border-color .2s, transform .2s
-    }
-
-    .stat-card:hover {
-      border-color: var(--bdr2);
-      transform: translateY(-3px)
-    }
-
-    .stat-card:nth-child(2) .stat {
-      color: var(--green)
-    }
-
-    .stat-label {
-      font-size: 13px;
-      color: var(--txt3);
-      font-weight: 500;
-      letter-spacing: .04em;
-      text-transform: uppercase
-    }
-
-    /* Gallery */
-    .gallery-section {
-      background: var(--surf);
-      border-top: 1px solid var(--bdr);
-      border-bottom: 1px solid var(--bdr)
-    }
-
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 3px
-    }
-
-    .gal-item {
-      overflow: hidden;
-      aspect-ratio: 1;
-      background: var(--card);
-      position: relative
-    }
-
-    .gal-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform .5s ease, filter .4s
-    }
-
-    .gal-item:hover img {
-      transform: scale(1.06);
-      filter: brightness(1.1)
-    }
-
-    .gal-item::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(59, 130, 246, .15), transparent);
-      opacity: 0;
-      transition: opacity .3s
-    }
-
-    .gal-item:hover::after {
-      opacity: 1
-    }
-
-    /* Testimonials */
-    .testi-section {
-      background: var(--bg)
-    }
-
-    .testi-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px
-    }
-
-    .testi-card {
-      background: var(--card);
-      border: 1px solid var(--bdr);
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      transition: border-color .25s, transform .25s
-    }
-
-    .testi-card:hover {
-      border-color: var(--bdr2);
-      transform: translateY(-2px)
-    }
-
-    .quote-mark {
-      font-size: 36px;
-      color: var(--blue);
-      line-height: 1;
-      font-weight: 900;
-      opacity: .6
-    }
-
-    .testi-quote {
-      font-size: 14px;
-      color: var(--txt2);
-      line-height: 1.7;
-      flex: 1
-    }
-
-    .testi-author {
-      border-top: 1px solid var(--bdr);
-      padding-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px
-    }
-
-    .testi-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #fff
-    }
-
-    .testi-role {
-      font-size: 11px;
-      color: var(--txt3);
-      letter-spacing: .06em;
-      text-transform: uppercase
-    }
-
-    /* Event Feed */
-    .events-section {
-      background: var(--surf);
-      border-top: 1px solid var(--bdr);
-      border-bottom: 1px solid var(--bdr)
-    }
-
-    .event-cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--bdr);
-      border: 1px solid var(--bdr);
-      margin: 40px 0 32px
-    }
-
-    .ev-card {
-      background: var(--card);
-      padding: 24px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: background .2s
-    }
-
-    .ev-card:hover {
-      background: var(--surf)
-    }
-
-    .ev-date {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--blue)
-    }
-
-    .ev-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.3
-    }
-
-    .ev-venue {
-      font-size: 12px;
-      color: var(--txt3)
-    }
-
-    .ev-live {
-      display: inline-block;
-      padding: 2px 8px;
-      background: rgba(34, 197, 94, .15);
-      border: 1px solid rgba(34, 197, 94, .3);
-      color: var(--green);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      width: fit-content
-    }
-
-    /* CTA Banner */
-    .cta-banner {
-      background: linear-gradient(135deg, var(--surf) 0%, rgba(30, 41, 59, .8) 100%);
-      border-top: 1px solid var(--bdr);
-      border-bottom: 1px solid var(--bdr);
-      padding: 80px 0;
-      position: relative;
-      overflow: hidden
-    }
-
-    .cta-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
-      align-items: center;
-      position: relative
-    }
-
-    .cta-right {
-      display: flex;
-      flex-direction: column;
-      gap: 20px
-    }
-
-    /* AI App Block Styles */
-    .ai-container {
-      background: var(--card);
-      border: 1px solid var(--bdr);
-      padding: 32px;
-      border-radius: 4px;
-      margin-top: 40px;
-    }
-
-    .ai-textarea {
-      width: 100%;
-      min-height: 120px;
-      background: var(--bg);
-      border: 1px solid var(--bdr);
-      color: #fff;
-      padding: 16px;
-      font-family: inherit;
-      font-size: 14px;
-      resize: vertical;
-      margin-bottom: 16px;
-    }
-
-    .ai-textarea:focus {
-      border-color: var(--blue);
-      outline: none;
-    }
-
-    .response-box {
-      background: var(--surf);
-      border-left: 4px solid var(--blue);
-      padding: 24px;
-      margin-top: 24px;
-      overflow-x: auto;
-    }
-
-    .response-box table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-    }
-
-    .response-box td, .response-box th {
-      border: 1px solid var(--bdr);
-      padding: 12px;
-      font-size: 14px;
-      color: var(--txt2);
-    }
-
-    @media(max-width:900px) {
-      .testi-grid {
-        grid-template-columns: 1fr 1fr
-      }
-
-      .event-cards {
-        grid-template-columns: 1fr 1fr
-      }
-    }
-
-    @media(max-width:640px) {
-      .hero-img-wrap img {
-        height: 320px
-      }
-
-      .testi-grid {
-        grid-template-columns: 1fr
-      }
-
-      .event-cards {
-        grid-template-columns: 1fr
-      }
-
-      .gallery-grid {
-        grid-template-columns: 1fr 1fr
-      }
-
-      .cta-inner {
-        grid-template-columns: 1fr;
-        gap: 32px
-      }
-
-      .inv-img img {
-        height: 300px
-      }
-    }
+    /* UI Styles */
+    .hero { min-height: 100vh; display: flex; align-items: center; padding-top: var(--nav-h); background: var(--bg); position: relative; overflow: hidden }
+    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 60% at 70% 50%, rgba(59, 130, 246, .07) 0%, transparent 70%); pointer-events: none }
+    .hero-left { display: flex; flex-direction: column; gap: 24px; max-width: 520px }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px }
+    .hero-img-wrap { position: relative; border: 1px solid var(--bdr2); overflow: hidden; background: var(--surf) }
+    .hero-img-wrap img { width: 100%; height: 500px; object-fit: cover; object-position: center top }
+    .hero-img-wrap::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 80px; background: linear-gradient(to top, var(--bg), transparent) }
+    .inverse { background: var(--surf); border-top: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr) }
+    .inv-left { display: flex; flex-direction: column; gap: 20px; padding-right: 16px }
+    .inv-icon-wrap { width: 52px; height: 52px; border: 1px solid rgba(34, 197, 94, .35); background: rgba(34, 197, 94, .08); display: flex; align-items: center; justify-content: center; margin-bottom: 4px }
+    .inv-img { position: relative; overflow: hidden; border: 1px solid var(--bdr2) }
+    .inv-img img { width: 100%; height: 460px; object-fit: cover }
+    .ai-container { background: var(--card); border: 1px solid var(--bdr); padding: 32px; border-radius: 4px; margin-top: 40px; }
+    .ai-textarea { width: 100%; min-height: 120px; background: var(--bg); border: 1px solid var(--bdr); color: #fff; padding: 16px; font-family: inherit; font-size: 14px; resize: vertical; margin-bottom: 16px; }
+    .ai-textarea:focus { border-color: var(--blue); outline: none; }
+    .response-box { background: var(--surf); border-left: 4px solid var(--blue); padding: 24px; margin-top: 24px; overflow-x: auto; }
+    .response-box table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .response-box td, .response-box th { border: 1px solid var(--bdr); padding: 12px; font-size: 14px; color: var(--txt2); }
+    @media(max-width:640px) { .hero-img-wrap img { height: 320px } .inv-img img { height: 300px } }
   </style>
 </head>
 
 <body>
-
   <nav class="nav">
     <div class="nav-in">
-      <a href="./index.html" class="logo">
-        <div class="logo-grid" aria-hidden="true">
-          <span></span><span></span><span></span>
-          <span></span><span></span><span></span>
-          <span></span><span></span><span></span>
-        </div>
-        <span class="logo-txt">Athlete-Sync</span>
-      </a>
+      <a href="./index.php" class="logo"><span class="logo-txt">Athlete-Sync</span></a>
       <div class="nav-links">
         <a href="./how-it-works.html">How it works</a>
         <a href="./updates.html">Updates</a>
       </div>
       <div class="nav-r" style="display:flex;align-items:center;gap:24px;">
-        <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);transition:color .2s"
-          onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--txt2)'">Login</a>
+        <a href="./login.html" style="font-size:14px;font-weight:600;color:var(--txt2);">Login</a>
         <a href="./get-started.html" class="btn btn-p btn-sm">Get started</a>
       </div>
-      <button class="hmbg" id="hmbg" aria-label="Open menu">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </nav>
-  <div class="mob-menu" id="mob-menu">
-    <a href="./how-it-works.html">How it works</a>
-    <a href="./updates.html">Updates</a>
-    <a href="./login.html"
-      style="font-size:16px;font-weight:600;color:var(--txt2);padding:10px 0;border-bottom:1px solid var(--bdr)">Login</a>
-    <a href="./get-started.html" class="btn btn-p" style="margin-top:8px">Get started</a>
-  </div>
 
   <section class="hero page-top">
     <div class="wrap" style="width:100%;padding-top:40px;padding-bottom:80px">
@@ -558,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="ai-container">
         <form method="POST" action="#ai-scheduler">
-          <label for="routine_prompt" class="stat-label" style="display:block;margin-bottom:12px;">Drop your chaotic query here:</label>
+          <label for="routine_prompt" class="stat-label" style="display:block;margin-bottom:12px;text-transform:uppercase;">Drop your chaotic query here:</label>
           <textarea id="routine_prompt" name="routine_prompt" class="ai-textarea" placeholder="Enter your routine..."><?php echo !empty($userInput) ? htmlspecialchars($userInput) : "I am a working guy. My job starts at 9:00 AM and I get back home around 6:30 PM. I am totally exhausted after work, but I love pickleball and want to manage at least 1 hour of playing time daily without destroying my sleep schedule or burning out. Fix my routine and give me a game plan!"; ?></textarea>
           <button type="submit" class="btn btn-p btn-lg" style="width:100%">Unleash the Chaos ⚡</button>
         </form>
@@ -580,16 +196,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="g2">
         <div class="inv-left">
           <div class="inv-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"
-              stroke-linecap="square">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="9,12 11,14 15,10" />
-            </svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="9,12 11,14 15,10" /></svg>
           </div>
-          <div class="accent-bar"></div>
           <h2 class="d3">Effortless scheduling.<br>More game time.</h2>
-          <p class="sub">Let AI handle your sports routine. We sync your matches, training, and recovery cycles so you
-            can focus on performance, not calendars.</p>
+          <p class="sub">Let AI handle your sports routine. We sync your matches, training, and recovery cycles so you can focus on performance.</p>
         </div>
         <div class="inv-img">
           <img src="./images/gym_training.jpg" alt="Athlete training in premium gym facility" loading="lazy">
@@ -598,24 +208,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </section>
 
-  <footer class="footer">
-    <div class="foot-in">
-      <div class="foot-l">
+  <footer class="footer" style="background:var(--surf); padding:30px 0; border-top:1px solid var(--bdr);">
+    <div class="wrap" style="display:flex; justify-content:space-between; align-items:center; color:var(--txt3); font-size:12px;">
         <span>Made by Shyrlx</span>
-        <span>yugdanidhariya007@gmail.com</span>
-      </div>
-      <div class="foot-r">
         <span>&copy; 2026 Athlete-Sync. All rights reserved.</span>
-      </div>
     </div>
   </footer>
-
-  <script>
-    const hmbg = document.getElementById('hmbg');
-    const mob = document.getElementById('mob-menu');
-    hmbg.addEventListener('click', () => {
-      mob.classList.toggle('open');
-    });
-  </script>
 </body>
 </html>
